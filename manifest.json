@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "My Dashboard",
+  "version": "1.0",
+  "description": "My personal dashboard as a new tab page",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "permissions": [
+    "storage",
+    "geolocation"
+  ],
+  "host_permissions": [
+    "https://*/*"
+  ]
+}

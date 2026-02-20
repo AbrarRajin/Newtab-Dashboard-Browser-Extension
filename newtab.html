@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>New Tab</title>
+  <link rel="stylesheet" href="modules/weather/weather.css">
+  <link rel="stylesheet" href="modules/football/football.css">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: auto;
+      align-items: center;
+      justify-items: center;
+      gap: 32px;
+      padding: 40px;
+      background: #0f0f0f;
+      color: #fff;
+    }
+
+    #module-football {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Modules -->
+
+
+  <div id="module-weather" class="weather-module"></div>
+  <div id="module-clock"></div>
+  <div id="module-football" class="fb-module-root"></div>
+  <div id="module-background"></div>
+
+  <script src="modules/clock/clock.js" type="module"></script>
+  <script src="newtab.js" type="module"></script>
+
+</body>
+
+</html>
