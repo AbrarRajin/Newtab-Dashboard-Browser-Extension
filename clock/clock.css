@@ -1,0 +1,194 @@
+/* ── Clock ───────────────────────────────────────────────── */
+#clock-wrapper {
+  text-align: center;
+  user-select: none;
+  font-family: 'Roboto', sans-serif;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#clock-time {
+  font-size: 6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+#clock-date {
+  margin-top: 0.5rem;
+  font-size: 1.4rem;
+  opacity: 0.6;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+}
+
+/* ── Settings button ─────────────────────────────────────── */
+#clock-settings-btn {
+  margin-top: 1.0rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.05rem;
+  color: rgba(138, 138, 138, 0.158);
+  transition: color 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+#clock-settings-btn:hover {
+  color: #fff;
+
+}
+
+/* ── Settings panel (inline) ─────────────────────────────── */
+#clock-settings-panel {
+  width: 320px;
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.clock-panel-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clock-panel-section h3 {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  font-family: sans-serif;
+}
+
+.clock-panel-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0.25rem 0;
+}
+
+/* ── Toggles ─────────────────────────────────────────────── */
+.clock-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: sans-serif;
+  font-size: 0.88rem;
+  opacity: 0.85;
+}
+
+.clock-toggle {
+  position: relative;
+  display: inline-block;
+  width: 2.4rem;
+  height: 1.3rem;
+  flex-shrink: 0;
+}
+
+.clock-toggle-row--disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.clock-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.clock-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.clock-toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  left: 0.15rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.clock-toggle input:checked+.clock-toggle-slider {
+  background: #4f8ef7;
+}
+
+.clock-toggle input:checked+.clock-toggle-slider::before {
+  transform: translate(1.1rem, -50%);
+}
+
+/* ── CSS input ───────────────────────────────────────────── */
+#clock-css-input {
+  width: 100%;
+  height: 200px;
+  background: #111;
+  color: #7dd3a8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  resize: vertical;
+  outline: none;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+#clock-css-input:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.clock-panel-hint {
+  font-size: 0.72rem;
+  opacity: 0.35;
+  font-family: sans-serif;
+  line-height: 1.4;
+}
+
+.clock-panel-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.clock-panel-actions button {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+
+.clock-panel-actions button:hover {
+  opacity: 0.85;
+}
+
+#clock-apply-btn {
+  background: #4f8ef7;
+  color: #fff;
+}
+
+#clock-reset-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
