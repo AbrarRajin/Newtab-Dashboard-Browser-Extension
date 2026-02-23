@@ -1,0 +1,344 @@
+/* ─── Football Module ──────────────────────────────────────────────────────── */
+
+.fb-module-root {
+    font-family: inherit;
+}
+
+.fb-card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 20px 22px;
+    color: #fff;
+    width: 450px;
+
+    box-sizing: border-box;
+    transition: border-color 0.4s, box-shadow 0.4s;
+}
+
+/* ── State highlights ── */
+.fb-card-live {
+    border-color: rgba(72, 199, 116, 0.55);
+    box-shadow: 0 0 18px rgba(72, 199, 116, 0.15), 0 0 60px rgba(72, 199, 116, 0.07);
+}
+
+.fb-card-soon {
+
+    border: 3px solid rgba(255, 7, 7, 0.616);
+    box-shadow: 0 0 18px rgba(255, 193, 7, 0.1);
+}
+
+/* ── Header ── */
+.fb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    position: relative;
+
+}
+
+.fb-competition {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 1.0rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    opacity: 0.6;
+
+
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.fb-comp-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+
+}
+
+
+.fb-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.05rem;
+    color: rgba(138, 138, 138, 0.158);
+    transition: color 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.fb-icon-btn:hover {
+    color: #fff;
+}
+
+/* ── Matchup layout ── */
+.fb-matchup {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.fb-team {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+}
+
+.fb-crest {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+}
+
+.fb-team-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    opacity: 0.9;
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+}
+
+/* ── Center block ── */
+.fb-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.fb-vs {
+    font-size: 1.0rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    opacity: 0.25;
+}
+
+.fb-date-line {
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.5;
+}
+
+.fb-time-line {
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.fb-gmt {
+    font-size: 0rem;
+    font-weight: 400;
+    opacity: 0.4;
+}
+
+/* ── Badges ── */
+.fb-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+}
+
+.fb-badge-live {
+    background: rgba(72, 199, 116, 0.18);
+    color: #4cd98a;
+    border: 1px solid rgba(72, 199, 116, 0.4);
+    animation: fb-pulse 1.6s ease-in-out infinite;
+}
+
+.fb-badge-soon {
+    background: rgba(255, 193, 7, 0.14);
+    color: #ffd54f;
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    font-variant-numeric: tabular-nums;
+    min-width: 116px;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+@keyframes fb-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.55;
+    }
+}
+
+/* ── Loading / error ── */
+.fb-loading,
+.fb-error-msg {
+    text-align: center;
+    opacity: 0.6;
+    padding: 20px 0;
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+.fb-error-msg {
+    color: #ffadad;
+    opacity: 1;
+}
+
+/* ── Onboarding ── */
+.fb-onboarding {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    padding: 4px 0;
+}
+
+.fb-onboard-icon {
+    font-size: 2.4rem;
+}
+
+.fb-onboarding h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.fb-onboarding p {
+    font-size: 0.79rem;
+    opacity: 0.7;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ── Settings ── */
+.fb-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.fb-settings-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.fb-settings-error {
+    margin: 0;
+    font-size: 0.77rem;
+    color: #ffadad;
+    background: rgba(255, 80, 80, 0.1);
+    border: 1px solid rgba(255, 80, 80, 0.28);
+    border-radius: 8px;
+    padding: 8px 10px;
+    line-height: 1.45;
+}
+
+.fb-label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.77rem;
+    opacity: 0.78;
+}
+
+/* ── Inputs ── */
+.fb-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.83rem;
+    padding: 7px 10px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.fb-css-input {
+    resize: vertical;
+    min-height: 90px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.77rem;
+    line-height: 1.5;
+    color: #7dd3a8;
+}
+
+.fb-input:focus {
+    border-color: rgba(255, 255, 255, 0.42);
+}
+
+.fb-input option {
+    background: #1e2a3a;
+    color: #fff;
+}
+
+/* ── Buttons ── */
+.fb-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.fb-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.18s;
+}
+
+.fb-btn:hover {
+    opacity: 0.82;
+}
+
+.fb-btn-primary {
+    background: #4f8ef7;
+    color: #fff;
+}
+
+.fb-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* ── Misc ── */
+.fb-link {
+    color: #7eb8ff;
+    font-size: 0.73rem;
+    text-decoration: none;
+    align-self: flex-start;
+}
+
+.fb-link:hover {
+    text-decoration: underline;
+}
+
+.fb-note {
+    font-size: 0.67rem;
+    opacity: 0.38;
+    text-align: center;
+    margin: 0;
+}
