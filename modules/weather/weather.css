@@ -1,0 +1,280 @@
+/* ─── Weather Module ───────────────────────────────────────────────────────── */
+/* Scope everything under .weather-module so it never leaks into newtab.html  */
+
+.weather-module {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 20px 24px;
+    color: #fff;
+    font-family: inherit;
+    width: 450px;
+    box-sizing: border-box;
+}
+
+/* ── Loading / Error ── */
+.w-loading,
+.w-error {
+    text-align: center;
+    opacity: 0.7;
+    padding: 24px 0;
+    font-size: 0.9rem;
+}
+
+.w-error {
+    color: #ffadad;
+}
+
+/* ── Header ── */
+.w-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.w-location {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.8;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.w-btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: rgba(138, 138, 138, 0.158);
+    transition: color 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.w-btn-icon:hover {
+    color: #fff;
+}
+
+/* ── Current weather ── */
+.w-current {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.w-icon-lg {
+    width: 80px;
+    height: 80px;
+    margin: -8px 0 -4px;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+}
+
+.w-temp-main {
+    font-size: 3rem;
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+.w-condition {
+    font-size: 0.9rem;
+    opacity: 0.75;
+    text-transform: capitalize;
+    margin: 4px 0 10px;
+}
+
+.w-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+/* ── 5-day Forecast ── */
+.w-forecast {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 14px;
+    gap: 4px;
+}
+
+.w-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+}
+
+.w-day-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    opacity: 0.65;
+    text-transform: uppercase;
+}
+
+.w-icon-sm {
+    width: 36px;
+    height: 36px;
+}
+
+.w-day-temps {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.3;
+}
+
+.w-day-high {
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.w-day-low {
+    font-size: 0.72rem;
+    opacity: 0.55;
+}
+
+/* ── Onboarding ── */
+.w-onboarding {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    padding: 8px 0;
+}
+
+.w-onboard-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.w-onboarding h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.w-onboarding p {
+    margin: 0;
+    font-size: 0.82rem;
+    opacity: 0.75;
+    line-height: 1.5;
+}
+
+/* ── Settings panel ── */
+.w-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.w-settings-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.w-label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+/* ── Shared inputs ── */
+.w-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.85rem;
+    padding: 7px 10px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.w-input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.w-input option {
+    background: #1e2a3a;
+    color: #fff;
+}
+
+.w-css-input {
+    resize: vertical;
+    min-height: 72px;
+    font-family: monospace;
+    font-size: 0.78rem;
+}
+
+/* ── Buttons ── */
+.w-settings-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.w-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.w-btn:hover {
+    opacity: 0.85;
+}
+
+.w-btn-save {
+    background: #4f8ef7;
+    color: #fff;
+}
+
+.w-btn-cancel {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+/* ── Misc ── */
+.w-link {
+    color: #7eb8ff;
+    font-size: 0.78rem;
+    text-decoration: none;
+    align-self: flex-start;
+}
+
+.w-link:hover {
+    text-decoration: underline;
+}
+
+.w-settings-error {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #ffadad;
+    background: rgba(255, 100, 100, 0.1);
+    border: 1px solid rgba(255, 100, 100, 0.3);
+    border-radius: 8px;
+    padding: 8px 10px;
+    line-height: 1.4;
+}
+
+.w-settings-note {
+    margin: 0;
+    font-size: 0.72rem;
+    opacity: 0.45;
+    text-align: center;
+}
