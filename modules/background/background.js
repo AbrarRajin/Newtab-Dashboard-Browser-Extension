@@ -88,7 +88,7 @@ export async function initBackground(container) {
     container.innerHTML = `
     <link rel="stylesheet" href="modules/background/background.css">
 
-    <button id="bg-btn" title="Background settings">B</button>
+    <button id="bg-btn" title="Background settings">📦</button>
 
     <div id="bg-panel">
       <div class="bg-section">
