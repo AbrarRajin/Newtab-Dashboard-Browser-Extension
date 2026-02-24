@@ -9,7 +9,9 @@
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 16px;
-    padding: 20px 22px;
+    padding: 10px 22px 50px 22px;
+    /* top right bottom left */
+
     color: #fff;
     width: 450px;
 
@@ -42,25 +44,29 @@
 .fb-competition {
     display: flex;
     align-items: center;
-    gap: 7px;
-    font-size: 1.0rem;
+    gap: 8px;
+
+    font-size: 1rem;
     font-weight: 600;
     letter-spacing: 0.07em;
     text-transform: uppercase;
     opacity: 0.6;
 
-
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    margin-right: auto;
+    margin-left: 80px;
+    /* pushes it to the left */
 }
 
 .fb-comp-logo {
-    width: 40px;
-    height: 40px;
+    width: 100px;
+    height: 100px;
     object-fit: contain;
-
+    padding: 0px 22px 0px 0px;
+    /* Turn logo white */
+    filter: brightness(0) invert(1);
 }
+
+
 
 
 .fb-icon-btn {
@@ -95,8 +101,8 @@
 }
 
 .fb-crest {
-    width: 90px;
-    height: 90px;
+    width: 75px;
+    height: 75px;
     object-fit: contain;
     filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
 }
@@ -138,6 +144,7 @@
     font-size: 1.2rem;
     font-weight: 700;
     letter-spacing: 0.04em;
+    text-align: center;
 }
 
 .fb-gmt {
