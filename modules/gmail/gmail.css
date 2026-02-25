@@ -1,0 +1,305 @@
+/* ─── Gmail Module ─────────────────────────────────────── */
+
+.gmail-module {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 20px 24px;
+    color: #fff;
+    width: 420px;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+/* ── Header ── */
+.gm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.gm-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gm-title-icon {
+    font-size: 1rem;
+}
+
+.gm-btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: rgba(138, 138, 138, 0.158);
+    transition: color 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.gm-btn-icon:hover {
+    color: #fff;
+}
+
+/* ── Loading / Error / Onboarding ── */
+.gm-loading,
+.gm-error,
+.gm-empty {
+    text-align: center;
+    opacity: 0.65;
+    padding: 20px 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.gm-error {
+    color: #ffadad;
+}
+
+/* ── Email list ── */
+.gm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.gm-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: default;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+}
+
+.gm-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.gm-item.gm-unread .gm-sender,
+.gm-item.gm-unread .gm-subject {
+    font-weight: 700;
+    opacity: 1;
+}
+
+.gm-sender {
+    font-size: 0.82rem;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gm-date {
+    font-size: 0.72rem;
+    opacity: 0.5;
+    white-space: nowrap;
+    grid-row: 1;
+    grid-column: 2;
+    align-self: center;
+}
+
+.gm-subject {
+    font-size: 0.78rem;
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    grid-column: 1 / -1;
+    margin-top: 2px;
+}
+
+.gm-unread-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4f8ef7;
+    margin-right: 5px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+/* ── Footer ── */
+.gm-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gm-open-link {
+    font-size: 0.75rem;
+    color: #7eb8ff;
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.gm-open-link:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.gm-refresh-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.gm-refresh-btn:hover {
+    color: #fff;
+}
+
+/* ── Onboarding ── */
+.gm-onboarding {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    padding: 8px 0;
+}
+
+.gm-onboard-icon {
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+.gm-onboarding h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.gm-onboarding p {
+    margin: 0;
+    font-size: 0.8rem;
+    opacity: 0.7;
+    line-height: 1.5;
+}
+
+.gm-btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    background: #4f8ef7;
+    color: #fff;
+    margin-top: 4px;
+}
+
+.gm-btn:hover {
+    opacity: 0.85;
+}
+
+.gm-note {
+    font-size: 0.7rem;
+    opacity: 0.35;
+    margin: 0;
+}
+
+
+/* ── Settings panel ── */
+.gm-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.gm-settings-label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.gm-settings-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.83rem;
+    padding: 7px 10px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.gm-settings-input:focus {
+    border-color: rgba(255, 255, 255, 0.42);
+}
+
+.gm-settings-css {
+    resize: vertical;
+    min-height: 100px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.77rem;
+    line-height: 1.5;
+    color: #7dd3a8;
+}
+
+.gm-settings-note {
+    font-size: 0.68rem;
+    opacity: 0.4;
+    line-height: 1.4;
+}
+
+.gm-settings-link {
+    color: #7eb8ff;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.gm-settings-link:hover {
+    text-decoration: underline;
+}
+
+.gm-settings-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.gm-btn-secondary {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
+
+.gm-settings-danger {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 12px;
+}
+
+.gm-btn-danger {
+    background: rgba(255, 80, 80, 0.15) !important;
+    color: #ff8080 !important;
+    border: 1px solid rgba(255, 80, 80, 0.3) !important;
+    width: 100%;
+}
+
+.gm-btn-danger:hover {
+    background: rgba(255, 80, 80, 0.28) !important;
+}
