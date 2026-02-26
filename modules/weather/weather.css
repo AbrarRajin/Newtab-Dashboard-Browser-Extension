@@ -70,12 +70,14 @@
     width: 80px;
     height: 80px;
     margin: -8px 0 -4px;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+    filter:
+        brightness(3) contrast(1.15) saturate(1.1) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
 }
+
 
 .w-temp-main {
     font-size: 3rem;
-    font-weight: 300;
+    font-weight: 700;
     line-height: 1.1;
     letter-spacing: -0.02em;
 }
@@ -121,6 +123,7 @@
 .w-icon-sm {
     width: 36px;
     height: 36px;
+    filter: brightness(1.5) contrast(1.1) saturate(1.1) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.25));
 }
 
 .w-day-temps {
@@ -213,7 +216,7 @@
 
 .w-css-input {
     resize: vertical;
-    min-height: 72px;
+    min-height: 150px;
     font-family: monospace;
     font-size: 0.78rem;
 }
