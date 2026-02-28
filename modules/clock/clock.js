@@ -8,7 +8,8 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
 let settings = { hour24: true, showSeconds: true, showAmPm: true };
 let tickInterval = null;
 
-const root = document.getElementById('module-clock');
+// Always look up fresh — never cache as a module-level const
+const root = () => document.getElementById('module-clock');
 
 // ── Storage helpers ───────────────────────────────────────
 
@@ -56,10 +57,12 @@ function startTick() {
 // ── Render: clock view ────────────────────────────────────
 
 function renderClock(css) {
-  root.innerHTML = `
+  const el = root();
+  if (!el) return;
+
+  el.innerHTML = `
     <link rel="stylesheet" href="modules/clock/clock.css" />
     <style id="clock-user-styles">${css}</style>
-
     <div id="clock-wrapper">
       <div id="clock-time">00:00:00</div>
       <div id="clock-date">Monday, January 1</div>
@@ -76,12 +79,15 @@ function renderClock(css) {
 // ── Render: settings view ─────────────────────────────────
 
 function showSettings() {
+  if (!root()) return;
+
   chromeGet(STORAGE_KEY, res => {
+    const el = root();          // re-query AFTER async gap
+    if (!el) return;
     const css = res[STORAGE_KEY] || '';
 
-    root.innerHTML = `
+    el.innerHTML = `
       <link rel="stylesheet" href="modules/clock/clock.css" />
-
       <div id="clock-settings-panel">
         <div class="clock-panel-section">
           <h3>Settings</h3>
@@ -105,7 +111,9 @@ function showSettings() {
           <div class="clock-toggle-row ${settings.hour24 ? 'clock-toggle-row--disabled' : ''}" id="toggle-ampm-row">
             <span>Show AM / PM</span>
             <label class="clock-toggle">
-              <input type="checkbox" id="toggle-ampm" ${settings.showAmPm ? 'checked' : ''} ${settings.hour24 ? 'disabled' : ''} />
+              <input type="checkbox" id="toggle-ampm"
+                ${settings.showAmPm ? 'checked' : ''}
+                ${settings.hour24 ? 'disabled' : ''} />
               <span class="clock-toggle-slider"></span>
             </label>
           </div>
@@ -141,10 +149,24 @@ body {
         <div class="clock-panel-divider"></div>
 
         <div class="clock-panel-actions">
-          <button id="clock-close-btn" style="background:rgba(255,255,255,0.08);color:#fff;flex:1;padding:0.5rem;border-radius:6px;border:none;cursor:pointer;font-size:0.82rem;font-weight:600;">← Back to Clock</button>
+          <button id="clock-close-btn">← Back to Clock</button>
         </div>
       </div>
     `;
+
+    // Style the close button without inline style attribute (avoids CSP warning)
+    const closeBtn = document.getElementById('clock-close-btn');
+    if (closeBtn) {
+      closeBtn.style.background = 'rgba(255,255,255,0.08)';
+      closeBtn.style.color = '#fff';
+      closeBtn.style.flex = '1';
+      closeBtn.style.padding = '0.5rem';
+      closeBtn.style.borderRadius = '6px';
+      closeBtn.style.border = 'none';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.fontSize = '0.82rem';
+      closeBtn.style.fontWeight = '600';
+    }
 
     // Toggle listeners
     const toggle24h = document.getElementById('toggle-24h');
@@ -178,14 +200,13 @@ body {
     document.getElementById('clock-apply-btn').addEventListener('click', () => {
       const newCss = document.getElementById('clock-css-input').value.trim();
       chromeSet(STORAGE_KEY, newCss);
-      // Re-render clock with new CSS
       initClock();
     });
 
     document.getElementById('clock-reset-btn').addEventListener('click', () => {
       document.getElementById('clock-css-input').value = '';
       chromeSet(STORAGE_KEY, '');
-      let tag = document.getElementById('clock-user-styles');
+      const tag = document.getElementById('clock-user-styles');
       if (tag) tag.textContent = '';
     });
 
@@ -197,14 +218,23 @@ body {
 
 function initClock() {
   chromeGet(STORAGE_TOGGLES, res => {
+    if (!root()) return;   // re-check after async gap
     let saved = res[STORAGE_TOGGLES];
     if (typeof saved === 'string') { try { saved = JSON.parse(saved); } catch { saved = null; } }
     if (saved) settings = { ...settings, ...saved };
 
     chromeGet(STORAGE_KEY, res2 => {
+      if (!root()) return;   // re-check after second async gap
       renderClock(res2[STORAGE_KEY] || '');
     });
   });
+}
+
+// Defer until DOM is ready (module scripts are deferred but being explicit is safer)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initClock);
+} else {
+  initClock();
 }
 
 initClock();
