@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>New Tab</title>
+  <link rel="stylesheet" href="modules/gmail/gmail.css">
   <link rel="stylesheet" href="modules/weather/weather.css">
   <link rel="stylesheet" href="modules/football/football.css">
   <style>
@@ -38,14 +39,15 @@
 <body>
 
   <!-- Modules -->
-
-
-  <div id="module-weather" class="weather-module"></div>
+  <div id="module-searchbar" style="grid-column: 1 / -1;"></div>
+  <div id="module-quicklinks" style="grid-column: 1 / -1; width: 100%;"></div>
   <div id="module-clock"></div>
+  <div id="module-weather" class="weather-module"></div>
+  <div id="module-gmail" class="gmail-module"></div>
   <div id="module-football" class="fb-module-root"></div>
   <div id="module-background"></div>
 
-  <script src="modules/clock/clock.js" type="module"></script>
+  <!-- Single entry point — newtab.js imports and inits everything including clock -->
   <script src="newtab.js" type="module"></script>
 
 </body>
