@@ -25,14 +25,17 @@
   font-family: 'Courier New', monospace;
 }
 
-/* ── Settings button ─────────────────────────────────────── */
+/* ── Settings button — floats to the right, no layout space ─ */
 #clock-settings-btn {
-  margin-top: 1.0rem;
+  position: absolute;
+  top: 0;
+  right: -2.2rem;
+  /* sits just outside the clock text */
   background: none;
   border: none;
   cursor: pointer;
   font-size: 1.05rem;
-  color: rgba(138, 138, 138, 0.158);
+  color: rgba(138, 138, 138, 0.25);
   transition: color 0.2s;
   padding: 0;
   line-height: 1;
@@ -40,7 +43,6 @@
 
 #clock-settings-btn:hover {
   color: #fff;
-
 }
 
 /* ── Settings panel (inline) ─────────────────────────────── */

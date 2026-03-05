@@ -9,7 +9,8 @@
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 16px;
-    padding: 10px 22px 50px 22px;
+
+    padding: 0px 16px 50px 16px;
     /* top right bottom left */
 
     color: #fff;
@@ -27,7 +28,7 @@
 
 .fb-card-soon {
 
-    border: 3px solid rgba(255, 7, 7, 0.616);
+    border: 5px solid rgba(255, 70, 70, 0.952);
     box-shadow: 0 0 18px rgba(255, 193, 7, 0.1);
 }
 
@@ -36,7 +37,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 0px;
     position: relative;
 
 }
@@ -63,7 +64,8 @@
     object-fit: contain;
     padding: 0px 22px 0px 0px;
     /* Turn logo white */
-    filter: brightness(0) invert(1);
+    filter:
+        drop-shadow(0 0 20px rgba(255, 255, 255, 1)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 80px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 120px rgba(255, 255, 255, 0.5));
 }
 
 
@@ -104,7 +106,6 @@
     width: 75px;
     height: 75px;
     object-fit: contain;
-    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
 }
 
 .fb-team-name {
@@ -123,19 +124,25 @@
     align-items: center;
     gap: 5px;
     flex-shrink: 0;
+    min-width: 110px;
+    /* adjust until it matches your design */
+    text-align: center;
+    /* ensures every line centers in same width */
 }
 
 .fb-vs {
-    font-size: 1.0rem;
-    font-weight: 700;
+    width: 100%;
+    text-align: center;
     letter-spacing: 0.12em;
-    opacity: 0.25;
+    transform: translateX(-0.06em);
+    /* half of 0.12em */
 }
 
 .fb-date-line {
     font-size: 0.68rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    text-align: center;
     opacity: 0.5;
 }
 
@@ -145,13 +152,16 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     text-align: center;
+    /* ✅ centers text */
+    transform: translateX(-0.02em);
+    /* half of letter-spacing: 0.04em */
 }
 
+
 .fb-gmt {
-    font-size: 0rem;
-    font-weight: 400;
-    opacity: 0.4;
+    display: none;
 }
+
 
 /* ── Badges ── */
 .fb-badge {

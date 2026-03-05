@@ -12,16 +12,16 @@ const qlFav = url => { try { return `https://www.google.com/s2/favicons?domain=$
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
 function qlGet() {
-    return new Promise(r => {
-        try { chrome.storage.local.get(QL_STORE, d => r(d[QL_STORE] ?? null)); }
-        catch { try { r(JSON.parse(localStorage.getItem(QL_STORE))); } catch { r(null); } }
-    });
+  return new Promise(r => {
+    try { chrome.storage.local.get(QL_STORE, d => r(d[QL_STORE] ?? null)); }
+    catch { try { r(JSON.parse(localStorage.getItem(QL_STORE))); } catch { r(null); } }
+  });
 }
 function qlSet(v) {
-    return new Promise(r => {
-        try { chrome.storage.local.set({ [QL_STORE]: v }, r); }
-        catch { localStorage.setItem(QL_STORE, JSON.stringify(v)); r(); }
-    });
+  return new Promise(r => {
+    try { chrome.storage.local.set({ [QL_STORE]: v }, r); }
+    catch { localStorage.setItem(QL_STORE, JSON.stringify(v)); r(); }
+  });
 }
 
 // ─── Embedded CSS ─────────────────────────────────────────────────────────
@@ -31,6 +31,7 @@ const QL_CSS = `
   width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: center;  
   gap: 16px;
   padding: 8px 0;
 }
@@ -39,6 +40,7 @@ const QL_CSS = `
 #ql-catbar {
   display: flex;
   align-items: center;
+  justify-content: center; 
   gap: 8px;
   flex-wrap: wrap;
 }
@@ -87,6 +89,7 @@ const QL_CSS = `
 #ql-body {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 20px;
 }
 .ql-empty {
@@ -117,6 +120,7 @@ const QL_CSS = `
 .ql-links {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center; 
   gap: 10px;
   align-items: flex-start;
 }
@@ -137,11 +141,12 @@ const QL_CSS = `
 }
 .ql-link:hover { background: rgba(255,255,255,0.07); }
 
+/* ── Icon ─────────────────────────────────────────── */
 .ql-icon {
   width: 54px;
   height: 54px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,7 +154,38 @@ const QL_CSS = `
   font-size: 1.4rem;
   flex-shrink: 0;
 }
-.ql-icon img { width: 36px; height: 36px; object-fit: contain; }
+.ql-icon img { width: 50px; height: 50px; object-fit: contain; }
+
+/* Sheen on the whole tile ───────────────────────── */
+.ql-link {
+  position: relative;
+  overflow: hidden;
+}
+.ql-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0)   30%,
+    rgba(255,255,255,0.18) 50%,
+    rgba(255,255,255,0)   70%
+  );
+  transform: translateX(-100%) skewX(-25deg);
+  opacity: 0;
+  transition: transform 0.55s ease, opacity 0.25s ease;
+  pointer-events: none;
+}
+.ql-link:hover::after {
+  transform: translateX(150%) skewX(-25deg);
+  opacity: 1;
+}
+
+/* Subtle brightness lift on hover */
+.ql-link:hover .ql-icon img {
+  filter: brightness(1.08);
+  transition: filter 0.3s ease;
+}
 
 .ql-lbl {
   font-size: 0.66rem;
@@ -205,7 +241,7 @@ const QL_CSS = `
   font-weight: 600;
   cursor: pointer;
   transition: all 0.14s;
-  align-self: flex-start;
+  align-self: center;
   font-family: sans-serif;
 }
 .ql-folder-add-btn:hover {
@@ -325,17 +361,17 @@ const QL_CSS = `
 
 // ─── Module entry point ────────────────────────────────────────────────────
 export async function initQuicklinks(el) {
-    let data = await qlGet() ?? { activeId: null, cats: [] };
-    if (!data.cats.find(c => c.id === data.activeId))
-        data.activeId = data.cats[0]?.id ?? null;
+  let data = await qlGet() ?? { activeId: null, cats: [] };
+  if (!data.cats.find(c => c.id === data.activeId))
+    data.activeId = data.cats[0]?.id ?? null;
 
-    // Inject styles once
-    if (!document.getElementById('ql-css')) {
-        const s = Object.assign(document.createElement('style'), { id: 'ql-css', textContent: QL_CSS });
-        document.head.appendChild(s);
-    }
+  // Inject styles once
+  if (!document.getElementById('ql-css')) {
+    const s = Object.assign(document.createElement('style'), { id: 'ql-css', textContent: QL_CSS });
+    document.head.appendChild(s);
+  }
 
-    el.innerHTML = `
+  el.innerHTML = `
     <div id="ql-root">
       <div id="ql-body"></div>
       <div id="ql-catbar"></div>
@@ -343,44 +379,44 @@ export async function initQuicklinks(el) {
     <div class="ql-ctx" id="ql-ctx"></div>
     <div id="ql-modal-wrap"></div>`;
 
-    const ctxEl = document.getElementById('ql-ctx');
-    const modalWrap = document.getElementById('ql-modal-wrap');
+  const ctxEl = document.getElementById('ql-ctx');
+  const modalWrap = document.getElementById('ql-modal-wrap');
 
-    const save = () => qlSet(data);
-    const activeCat = () => data.cats.find(c => c.id === data.activeId);
+  const save = () => qlSet(data);
+  const activeCat = () => data.cats.find(c => c.id === data.activeId);
 
-    // ── Draw ──────────────────────────────────────────────────────────────
+  // ── Draw ──────────────────────────────────────────────────────────────
 
-    function draw() { drawCatbar(); drawBody(); }
+  function draw() { drawCatbar(); drawBody(); }
 
-    function drawCatbar() {
-        const bar = document.getElementById('ql-catbar');
-        if (!bar) return;
-        bar.innerHTML =
-            data.cats.map(c =>
-                `<button class="ql-cat${c.id === data.activeId ? ' ql-cat-on' : ''}" data-id="${c.id}">${esc(c.name)}</button>`
-            ).join('') +
-            `<button class="ql-cat-add" id="ql-cat-add">＋ Category</button>`;
+  function drawCatbar() {
+    const bar = document.getElementById('ql-catbar');
+    if (!bar) return;
+    bar.innerHTML =
+      data.cats.map(c =>
+        `<button class="ql-cat${c.id === data.activeId ? ' ql-cat-on' : ''}" data-id="${c.id}">${esc(c.name)}</button>`
+      ).join('') +
+      `<button class="ql-cat-add" id="ql-cat-add"> ＋ </button>`;
 
-        bar.querySelectorAll('.ql-cat').forEach(btn => {
-            btn.addEventListener('click', () => { data.activeId = btn.dataset.id; save(); drawCatbar(); drawBody(); });
-            btn.addEventListener('contextmenu', e => { e.preventDefault(); catCtx(e, btn.dataset.id); });
-        });
-        document.getElementById('ql-cat-add')?.addEventListener('click', () => openModal({ type: 'cat' }));
+    bar.querySelectorAll('.ql-cat').forEach(btn => {
+      btn.addEventListener('click', () => { data.activeId = btn.dataset.id; save(); drawCatbar(); drawBody(); });
+      btn.addEventListener('contextmenu', e => { e.preventDefault(); catCtx(e, btn.dataset.id); });
+    });
+    document.getElementById('ql-cat-add')?.addEventListener('click', () => openModal({ type: 'cat' }));
+  }
+
+  function drawBody() {
+    const body = document.getElementById('ql-body');
+    if (!body) return;
+    const cat = activeCat();
+
+    if (!cat) {
+      body.innerHTML = `<div class="ql-empty">No category selected — add one below ↓</div>`;
+      return;
     }
 
-    function drawBody() {
-        const body = document.getElementById('ql-body');
-        if (!body) return;
-        const cat = activeCat();
-
-        if (!cat) {
-            body.innerHTML = `<div class="ql-empty">No category selected — add one below ↓</div>`;
-            return;
-        }
-
-        body.innerHTML =
-            cat.folders.map(f => `
+    body.innerHTML =
+      cat.folders.map(f => `
         <div class="ql-folder" data-fid="${f.id}">
           <span class="ql-folder-name" data-fid="${f.id}">${esc(f.name)}</span>
           <div class="ql-links" data-fid="${f.id}">
@@ -391,124 +427,126 @@ export async function initQuicklinks(el) {
             </div>
           </div>
         </div>`
-            ).join('') +
-            `<button class="ql-folder-add-btn" id="ql-add-folder">＋ Add Folder</button>`;
+      ).join('') +
+      `<button class="ql-folder-add-btn" id="ql-add-folder">＋ Add Folder</button>`;
 
-        // Link clicks & right-clicks
-        body.querySelectorAll('.ql-link').forEach(a => {
-            a.addEventListener('click', e => { e.preventDefault(); window.open(a.dataset.url, '_blank'); });
-            a.addEventListener('contextmenu', e => { e.preventDefault(); linkCtx(e, a.dataset.fid, a.dataset.lid); });
-        });
+    // Link clicks & right-clicks
+    body.querySelectorAll('.ql-link').forEach(a => {
+      a.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        linkCtx(e, a.dataset.fid, a.dataset.lid);
+      });
+    });
 
-        // Folder name right-click
-        body.querySelectorAll('.ql-folder-name').forEach(span =>
-            span.addEventListener('contextmenu', e => { e.preventDefault(); folderCtx(e, span.dataset.fid); })
-        );
+    // Folder name right-click
+    body.querySelectorAll('.ql-folder-name').forEach(span =>
+      span.addEventListener('contextmenu', e => { e.preventDefault(); folderCtx(e, span.dataset.fid); })
+    );
 
-        // Add-link placeholder
-        body.querySelectorAll('.ql-add-ph').forEach(div =>
-            div.addEventListener('click', () => openModal({ type: 'link', catId: cat.id, folderId: div.dataset.fid }))
-        );
+    // Add-link placeholder
+    body.querySelectorAll('.ql-add-ph').forEach(div =>
+      div.addEventListener('click', () => openModal({ type: 'link', catId: cat.id, folderId: div.dataset.fid }))
+    );
 
-        document.getElementById('ql-add-folder')?.addEventListener('click', () =>
-            openModal({ type: 'folder', catId: cat.id })
-        );
-    }
+    document.getElementById('ql-add-folder')?.addEventListener('click', () =>
+      openModal({ type: 'folder', catId: cat.id })
+    );
+  }
 
-    function linkHtml(l, fid) {
-        const icon = l.iconUrl || qlFav(l.url);
-        return `<a class="ql-link" data-lid="${l.id}" data-fid="${fid}" data-url="${esc(l.url)}" href="${esc(l.url)}" title="${esc(l.title)}">
+  function linkHtml(l, fid) {
+    const icon = l.iconUrl || qlFav(l.url);
+    return `<a class="ql-link" data-lid="${l.id}" data-fid="${fid}" data-url="${esc(l.url)}" href="${esc(l.url)}" title="${esc(l.title)}">
       <div class="ql-icon"><img src="${esc(icon)}" onerror="this.parentElement.textContent='🔗'" alt=""></div>
       <span class="ql-lbl">${esc(l.title)}</span>
     </a>`;
-    }
+  }
 
-    // ── Context menu ───────────────────────────────────────────────────────
+  // ── Context menu ───────────────────────────────────────────────────────
 
-    let iH = {}; // action handlers
+  let iH = {}; // action handlers
 
-    function openCtx(e, items) {
-        ctxEl.innerHTML = items.map(i =>
-            i.sep ? `<div class="ql-ctx-sep"></div>`
-                : `<div class="ql-ctx-item${i.danger ? ' danger' : ''}" data-a="${i.a}">${i.label}</div>`
-        ).join('');
+  function openCtx(e, items) {
+    ctxEl.innerHTML = items.map(i =>
+      i.sep ? `<div class="ql-ctx-sep"></div>`
+        : `<div class="ql-ctx-item${i.danger ? ' danger' : ''}" data-a="${i.a}">${i.label}</div>`
+    ).join('');
 
-        ctxEl.style.cssText = `left:${e.clientX}px;top:${e.clientY}px`;
-        ctxEl.classList.add('open');
+    ctxEl.style.cssText = `left:${e.clientX}px;top:${e.clientY}px`;
+    ctxEl.classList.add('open');
 
-        // Clamp to viewport
-        requestAnimationFrame(() => {
-            const r = ctxEl.getBoundingClientRect();
-            if (r.right > innerWidth) ctxEl.style.left = (innerWidth - r.width - 8) + 'px';
-            if (r.bottom > innerHeight) ctxEl.style.top = (innerHeight - r.height - 8) + 'px';
-        });
+    // Clamp to viewport
+    requestAnimationFrame(() => {
+      const r = ctxEl.getBoundingClientRect();
+      if (r.right > innerWidth) ctxEl.style.left = (innerWidth - r.width - 8) + 'px';
+      if (r.bottom > innerHeight) ctxEl.style.top = (innerHeight - r.height - 8) + 'px';
+    });
 
-        ctxEl.querySelectorAll('.ql-ctx-item').forEach(el =>
-            el.addEventListener('click', ev => { ev.stopPropagation(); iH[el.dataset.a]?.(); closeCtx(); })
-        );
-        setTimeout(() => document.addEventListener('click', closeCtx, { once: true }), 0);
-    }
+    ctxEl.querySelectorAll('.ql-ctx-item').forEach(el =>
+      el.addEventListener('click', ev => { ev.stopPropagation(); iH[el.dataset.a]?.(); closeCtx(); })
+    );
+    setTimeout(() => document.addEventListener('click', closeCtx, { once: true }), 0);
+  }
 
-    function closeCtx() { ctxEl.classList.remove('open'); }
+  function closeCtx() { ctxEl.classList.remove('open'); }
 
-    function linkCtx(e, fid, lid) {
-        iH = {
-            edit: () => {
-                const cat = activeCat(), f = cat?.folders.find(f => f.id === fid), l = f?.links.find(l => l.id === lid);
-                if (l) openModal({ type: 'link', catId: cat.id, folderId: fid, edit: l });
-            },
-            del: () => {
-                const cat = activeCat(), f = cat?.folders.find(f => f.id === fid);
-                if (f) { f.links = f.links.filter(l => l.id !== lid); save(); drawBody(); }
-            }
-        };
-        openCtx(e, [
-            { label: '✏️  Edit Link', a: 'edit' },
-            { sep: true },
-            { label: '🗑  Delete Link', a: 'del', danger: true }
-        ]);
-    }
+  function linkCtx(e, fid, lid) {
+    iH = {
+      edit: () => {
+        const cat = activeCat(), f = cat?.folders.find(f => f.id === fid), l = f?.links.find(l => l.id === lid);
+        if (l) openModal({ type: 'link', catId: cat.id, folderId: fid, edit: l });
+      },
+      del: () => {
+        const cat = activeCat(), f = cat?.folders.find(f => f.id === fid);
+        if (f) { f.links = f.links.filter(l => l.id !== lid); save(); drawBody(); }
+      }
+    };
+    openCtx(e, [
+      { label: '✏️  Edit Link', a: 'edit' },
+      { sep: true },
+      { label: '🗑  Delete Link', a: 'del', danger: true }
+    ]);
+  }
 
-    function folderCtx(e, fid) {
-        const cat = activeCat();
-        iH = {
-            addlnk: () => openModal({ type: 'link', catId: cat?.id, folderId: fid }),
-            rename: () => { const f = cat?.folders.find(f => f.id === fid); if (f) openModal({ type: 'folder', catId: cat.id, edit: f }); },
-            del: () => { if (cat) { cat.folders = cat.folders.filter(f => f.id !== fid); save(); drawBody(); } }
-        };
-        openCtx(e, [
-            { label: '＋  Add Link', a: 'addlnk' },
-            { label: '✏️  Rename Folder', a: 'rename' },
-            { sep: true },
-            { label: '🗑  Delete Folder', a: 'del', danger: true }
-        ]);
-    }
+  function folderCtx(e, fid) {
+    const cat = activeCat();
+    iH = {
+      addlnk: () => openModal({ type: 'link', catId: cat?.id, folderId: fid }),
+      rename: () => { const f = cat?.folders.find(f => f.id === fid); if (f) openModal({ type: 'folder', catId: cat.id, edit: f }); },
+      del: () => { if (cat) { cat.folders = cat.folders.filter(f => f.id !== fid); save(); drawBody(); } }
+    };
+    openCtx(e, [
+      { label: '＋  Add Link', a: 'addlnk' },
+      { label: '✏️  Rename Folder', a: 'rename' },
+      { sep: true },
+      { label: '🗑  Delete Folder', a: 'del', danger: true }
+    ]);
+  }
 
-    function catCtx(e, catId) {
-        iH = {
-            rename: () => { const c = data.cats.find(c => c.id === catId); if (c) openModal({ type: 'cat', edit: c }); },
-            del: () => {
-                data.cats = data.cats.filter(c => c.id !== catId);
-                if (data.activeId === catId) data.activeId = data.cats[0]?.id ?? null;
-                save(); draw();
-            }
-        };
-        openCtx(e, [
-            { label: '✏️  Rename', a: 'rename' },
-            { sep: true },
-            { label: '🗑  Delete Category', a: 'del', danger: true }
-        ]);
-    }
+  function catCtx(e, catId) {
+    iH = {
+      rename: () => { const c = data.cats.find(c => c.id === catId); if (c) openModal({ type: 'cat', edit: c }); },
+      del: () => {
+        data.cats = data.cats.filter(c => c.id !== catId);
+        if (data.activeId === catId) data.activeId = data.cats[0]?.id ?? null;
+        save(); draw();
+      }
+    };
+    openCtx(e, [
+      { label: '✏️  Rename', a: 'rename' },
+      { sep: true },
+      { label: '🗑  Delete Category', a: 'del', danger: true }
+    ]);
+  }
 
-    // ── Modal ──────────────────────────────────────────────────────────────
+  // ── Modal ──────────────────────────────────────────────────────────────
 
-    function openModal(opts) {
-        const { type, edit } = opts;
-        let body = '';
+  function openModal(opts) {
+    const { type, edit } = opts;
+    let body = '';
 
-        if (type === 'link') {
-            const l = edit;
-            body = `
+    if (type === 'link') {
+      const l = edit;
+      body = `
         <h3>${l ? 'Edit' : 'Add'} Link</h3>
         <div class="ql-mfield">
           <label>Title</label>
@@ -526,23 +564,23 @@ export async function initQuicklinks(el) {
           <div class="ql-mprev-icon"><img id="m-pimg" src="" alt=""></div>
           <span class="ql-mprev-name" id="m-pname"></span>
         </div>`;
-        } else if (type === 'folder') {
-            body = `
+    } else if (type === 'folder') {
+      body = `
         <h3>${edit ? 'Rename' : 'Add'} Folder</h3>
         <div class="ql-mfield">
           <label>Name</label>
           <input class="ql-minput" id="m-name" placeholder="My Folder" value="${esc(edit?.name || '')}">
         </div>`;
-        } else {
-            body = `
+    } else {
+      body = `
         <h3>${edit ? 'Rename' : 'Add'} Category</h3>
         <div class="ql-mfield">
           <label>Name</label>
           <input class="ql-minput" id="m-name" placeholder="SOCIALS" value="${esc(edit?.name || '')}">
         </div>`;
-        }
+    }
 
-        modalWrap.innerHTML = `
+    modalWrap.innerHTML = `
       <div class="ql-modal">
         ${body}
         <div class="ql-mactions">
@@ -550,82 +588,82 @@ export async function initQuicklinks(el) {
           <button class="ql-mbtn ql-mbtn-s" id="m-cancel">Cancel</button>
         </div>
       </div>`;
-        modalWrap.classList.add('open');
-        setTimeout(() => modalWrap.querySelector('.ql-minput')?.focus(), 30);
+    modalWrap.classList.add('open');
+    setTimeout(() => modalWrap.querySelector('.ql-minput')?.focus(), 30);
 
-        // Live icon/title preview for link type
-        if (type === 'link') {
-            const upd = () => {
-                const url = document.getElementById('m-url')?.value.trim();
-                const icon = document.getElementById('m-icon')?.value.trim() || qlFav(url || '');
-                const title = document.getElementById('m-title')?.value.trim();
-                const prev = document.getElementById('m-prev');
-                if (prev && (url || icon)) {
-                    prev.style.display = 'flex';
-                    document.getElementById('m-pimg').src = icon;
-                    document.getElementById('m-pname').textContent = title || url || '';
-                }
-            };
-            ['m-url', 'm-icon', 'm-title'].forEach(id => document.getElementById(id)?.addEventListener('input', upd));
-            if (edit) upd();
+    // Live icon/title preview for link type
+    if (type === 'link') {
+      const upd = () => {
+        const url = document.getElementById('m-url')?.value.trim();
+        const icon = document.getElementById('m-icon')?.value.trim() || qlFav(url || '');
+        const title = document.getElementById('m-title')?.value.trim();
+        const prev = document.getElementById('m-prev');
+        if (prev && (url || icon)) {
+          prev.style.display = 'flex';
+          document.getElementById('m-pimg').src = icon;
+          document.getElementById('m-pname').textContent = title || url || '';
         }
-
-        // Save logic
-        document.getElementById('m-save')?.addEventListener('click', () => {
-            if (type === 'link') {
-                let url = document.getElementById('m-url')?.value.trim();
-                if (!url) { document.getElementById('m-url')?.focus(); return; }
-                if (!/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(url)) url = 'https://' + url;
-                let title = document.getElementById('m-title')?.value.trim();
-                if (!title) { try { title = new URL(url).hostname; } catch { title = url; } }
-                const iconUrl = document.getElementById('m-icon')?.value.trim() || '';
-                const cat = data.cats.find(c => c.id === opts.catId);
-                const folder = cat?.folders.find(f => f.id === opts.folderId);
-                if (!folder) return;
-                if (edit) {
-                    const lnk = folder.links.find(l => l.id === edit.id);
-                    if (lnk) Object.assign(lnk, { title, url, iconUrl });
-                } else {
-                    folder.links.push({ id: qlUid(), title, url, iconUrl });
-                }
-                save(); closeModal(); drawBody();
-
-            } else if (type === 'folder') {
-                const name = document.getElementById('m-name')?.value.trim();
-                if (!name) { document.getElementById('m-name')?.focus(); return; }
-                const cat = data.cats.find(c => c.id === opts.catId);
-                if (!cat) return;
-                if (edit) {
-                    const f = cat.folders.find(f => f.id === edit.id);
-                    if (f) f.name = name;
-                } else {
-                    cat.folders.push({ id: qlUid(), name, links: [] });
-                }
-                save(); closeModal(); drawBody();
-
-            } else {
-                const name = document.getElementById('m-name')?.value.trim().toUpperCase();
-                if (!name) { document.getElementById('m-name')?.focus(); return; }
-                if (edit) {
-                    const c = data.cats.find(c => c.id === edit.id);
-                    if (c) c.name = name;
-                } else {
-                    const nc = { id: qlUid(), name, folders: [] };
-                    data.cats.push(nc);
-                    data.activeId = nc.id;
-                }
-                save(); closeModal(); draw();
-            }
-        });
-
-        document.getElementById('m-cancel')?.addEventListener('click', closeModal);
-        modalWrap.addEventListener('click', e => { if (e.target === modalWrap) closeModal(); });
-        modalWrap.querySelectorAll('.ql-minput').forEach(inp =>
-            inp.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('m-save')?.click(); })
-        );
+      };
+      ['m-url', 'm-icon', 'm-title'].forEach(id => document.getElementById(id)?.addEventListener('input', upd));
+      if (edit) upd();
     }
 
-    function closeModal() { modalWrap.classList.remove('open'); modalWrap.innerHTML = ''; }
+    // Save logic
+    document.getElementById('m-save')?.addEventListener('click', () => {
+      if (type === 'link') {
+        let url = document.getElementById('m-url')?.value.trim();
+        if (!url) { document.getElementById('m-url')?.focus(); return; }
+        if (!/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(url)) url = 'https://' + url;
+        let title = document.getElementById('m-title')?.value.trim();
+        if (!title) { try { title = new URL(url).hostname; } catch { title = url; } }
+        const iconUrl = document.getElementById('m-icon')?.value.trim() || '';
+        const cat = data.cats.find(c => c.id === opts.catId);
+        const folder = cat?.folders.find(f => f.id === opts.folderId);
+        if (!folder) return;
+        if (edit) {
+          const lnk = folder.links.find(l => l.id === edit.id);
+          if (lnk) Object.assign(lnk, { title, url, iconUrl });
+        } else {
+          folder.links.push({ id: qlUid(), title, url, iconUrl });
+        }
+        save(); closeModal(); drawBody();
 
-    draw();
+      } else if (type === 'folder') {
+        const name = document.getElementById('m-name')?.value.trim();
+        if (!name) { document.getElementById('m-name')?.focus(); return; }
+        const cat = data.cats.find(c => c.id === opts.catId);
+        if (!cat) return;
+        if (edit) {
+          const f = cat.folders.find(f => f.id === edit.id);
+          if (f) f.name = name;
+        } else {
+          cat.folders.push({ id: qlUid(), name, links: [] });
+        }
+        save(); closeModal(); drawBody();
+
+      } else {
+        const name = document.getElementById('m-name')?.value.trim().toUpperCase();
+        if (!name) { document.getElementById('m-name')?.focus(); return; }
+        if (edit) {
+          const c = data.cats.find(c => c.id === edit.id);
+          if (c) c.name = name;
+        } else {
+          const nc = { id: qlUid(), name, folders: [] };
+          data.cats.push(nc);
+          data.activeId = nc.id;
+        }
+        save(); closeModal(); draw();
+      }
+    });
+
+    document.getElementById('m-cancel')?.addEventListener('click', closeModal);
+    modalWrap.addEventListener('click', e => { if (e.target === modalWrap) closeModal(); });
+    modalWrap.querySelectorAll('.ql-minput').forEach(inp =>
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('m-save')?.click(); })
+    );
+  }
+
+  function closeModal() { modalWrap.classList.remove('open'); modalWrap.innerHTML = ''; }
+
+  draw();
 }

@@ -1,9 +1,11 @@
 // ── Background Module ─────────────────────────────────────────────────────
 // Stores the image as a base64 DataURL so it never needs re-downloading.
 // Falls back to storing the raw URL when fetching fails (e.g. CORS).
+// Background is rendered on a dedicated #bg-blur-layer so blur never
+// affects page widgets or overlays.
 // ─────────────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'bg_settings';  // { data, fit, dim, sourceUrl, sourceType }
+const STORAGE_KEY = 'bg_settings';  // { data, fit, dim, blur, sourceUrl, sourceType }
 
 // ── Storage helpers ───────────────────────────────────────────────────────
 
@@ -22,21 +24,37 @@ function storeSet(key, val) {
 }
 
 // ── Apply background to page ──────────────────────────────────────────────
+// Uses #bg-blur-layer (z-index: -2) for the image so filter:blur() never
+// bleeds onto widgets. #bg-dim-overlay (z-index: -1) sits on top of it.
 
 function applyBg(settings) {
     const overlay = document.getElementById('bg-dim-overlay');
+    const layer = document.getElementById('bg-blur-layer');
 
     if (!settings?.data) {
-        document.body.style.backgroundImage = '';
+        if (layer) { layer.style.backgroundImage = ''; layer.style.filter = ''; }
         if (overlay) overlay.style.opacity = 0;
         return;
     }
 
-    const { data, fit = 'cover', dim = 0 } = settings;
-    document.body.style.backgroundImage = `url(${data})`;
-    document.body.style.backgroundSize = fit === 'tile' ? 'auto' : fit;
-    document.body.style.backgroundRepeat = fit === 'tile' ? 'repeat' : 'no-repeat';
-    document.body.style.backgroundPosition = 'center';
+    const { data, fit = 'cover', dim = 0, blur = 0 } = settings;
+
+    if (layer) {
+        layer.style.backgroundImage = `url(${data})`;
+        layer.style.backgroundSize = fit === 'tile' ? 'auto' : fit;
+        layer.style.backgroundRepeat = fit === 'tile' ? 'repeat' : 'no-repeat';
+        layer.style.backgroundPosition = 'center';
+        // Expand layer slightly so blurred edges don't show gaps
+        if (blur > 0) {
+            const px = blur * 2 + 'px';
+            layer.style.inset = `-${px}`;
+            layer.style.filter = `blur(${blur}px)`;
+        } else {
+            layer.style.inset = '0';
+            layer.style.filter = '';
+        }
+    }
+
     if (overlay) overlay.style.opacity = dim;
 }
 
@@ -73,7 +91,23 @@ function fileToBase64(file) {
 // ── Module init ───────────────────────────────────────────────────────────
 
 export async function initBackground(container) {
-    // ── Inject dim overlay (behind all modules) ──────────────────────────
+
+    // ── Inject blur layer (lowest, behind dim overlay) ───────────────────
+    if (!document.getElementById('bg-blur-layer')) {
+        const layer = document.createElement('div');
+        layer.id = 'bg-blur-layer';
+        // Styles applied here so no extra CSS file entry is strictly needed,
+        // but you should also add it to background.css for clarity.
+        Object.assign(layer.style, {
+            position: 'fixed',
+            inset: '0',
+            zIndex: '-2',
+            pointerEvents: 'none',
+        });
+        document.body.prepend(layer);
+    }
+
+    // ── Inject dim overlay (above blur layer, still behind content) ───────
     if (!document.getElementById('bg-dim-overlay')) {
         const overlay = document.createElement('div');
         overlay.id = 'bg-dim-overlay';
@@ -138,6 +172,10 @@ export async function initBackground(container) {
           <span>Dim <span id="bg-dim-label">0%</span></span>
           <input type="range" id="bg-dim" min="0" max="0.85" step="0.05" value="0">
         </div>
+        <div class="bg-row">
+          <span>Blur <span id="bg-blur-label">0px</span></span>
+          <input type="range" id="bg-blur" min="0" max="20" step="1" value="0">
+        </div>
       </div>
 
       <div class="bg-divider"></div>
@@ -165,11 +203,13 @@ export async function initBackground(container) {
     const fitSel = document.getElementById('bg-fit');
     const dimRange = document.getElementById('bg-dim');
     const dimLabel = document.getElementById('bg-dim-label');
+    const blurRange = document.getElementById('bg-blur');
+    const blurLabel = document.getElementById('bg-blur-label');
     const applyBtn = document.getElementById('bg-apply');
     const resetBtn = document.getElementById('bg-reset');
     const statusEl = document.getElementById('bg-status');
 
-    let pendingData = null;   // base64 or raw URL ready to save
+    let pendingData = null;
     let activeTab = 'file';
 
     // ── Restore saved values into controls ───────────────────────────────
@@ -177,6 +217,8 @@ export async function initBackground(container) {
         fitSel.value = saved.fit ?? 'cover';
         dimRange.value = saved.dim ?? 0;
         dimLabel.textContent = Math.round((saved.dim ?? 0) * 100) + '%';
+        blurRange.value = saved.blur ?? 0;
+        blurLabel.textContent = (saved.blur ?? 0) + 'px';
         if (saved.data) {
             preview.src = saved.data;
             previewWrap.classList.remove('hidden');
@@ -244,12 +286,22 @@ export async function initBackground(container) {
         urlInput.value = '';
     });
 
-    // ── Dim slider ────────────────────────────────────────────────────────
+    // ── Dim slider (live preview) ─────────────────────────────────────────
     dimRange.addEventListener('input', () => {
         dimLabel.textContent = Math.round(dimRange.value * 100) + '%';
-        // Live preview of dim level
         const overlay = document.getElementById('bg-dim-overlay');
         if (overlay && pendingData) overlay.style.opacity = dimRange.value;
+    });
+
+    // ── Blur slider (live preview) ────────────────────────────────────────
+    blurRange.addEventListener('input', () => {
+        blurLabel.textContent = blurRange.value + 'px';
+        if (pendingData) applyBg({
+            data: pendingData,
+            fit: fitSel.value,
+            dim: parseFloat(dimRange.value),
+            blur: parseInt(blurRange.value),
+        });
     });
 
     // ── Apply ─────────────────────────────────────────────────────────────
@@ -258,6 +310,7 @@ export async function initBackground(container) {
             data: pendingData,
             fit: fitSel.value,
             dim: parseFloat(dimRange.value),
+            blur: parseInt(blurRange.value),
             sourceUrl: activeTab === 'url' ? urlInput.value.trim() : '',
             sourceType: activeTab,
         };
@@ -277,6 +330,8 @@ export async function initBackground(container) {
         fitSel.value = 'cover';
         dimRange.value = 0;
         dimLabel.textContent = '0%';
+        blurRange.value = 0;
+        blurLabel.textContent = '0px';
         applyBg(null);
         await storeSet(STORAGE_KEY, null);
         showStatus('Reset ✓');
