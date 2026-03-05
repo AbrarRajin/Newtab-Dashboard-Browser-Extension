@@ -5,7 +5,7 @@
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    width: 620px;
+    width: 800px;
     position: relative;
     z-index: 500;
     font-family: inherit;
@@ -45,12 +45,14 @@
     background: transparent;
     color: #fff;
     font-size: 1rem;
+
     outline: none;
     font-family: inherit;
     min-width: 0;
 }
 
 .sb-input::placeholder {
+
     color: rgba(255, 255, 255, 0.32);
 }
 
@@ -65,7 +67,7 @@
     padding: 10px 22px;
     border-radius: 999px;
     border: none;
-    background: #4f8ef7;
+    background: #1010109e;
     color: #fff;
     font-size: 0.9rem;
     font-weight: 700;
@@ -73,12 +75,12 @@
     transition: background 0.2s, opacity 0.15s;
     white-space: nowrap;
     font-family: inherit;
-    min-width: 90px;
+    min-width: 80px;
     text-align: center;
 }
 
 .sb-go-btn:hover {
-    background: #3a7ce8;
+    background: #191919;
 }
 
 /* ── Settings button ── */
@@ -89,7 +91,10 @@
     font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.2);
     transition: color 0.2s;
-    padding: 0 10px 0 6px;
+    padding: 0 20px 0 20px;
+    /* extra right padding for better click area */
+    margin-left: 8px;
+    margin-right: 8px;
     line-height: 1;
     flex-shrink: 0;
 }
@@ -162,7 +167,7 @@
     padding: 7px 16px;
     border-radius: 999px;
     border: none;
-    background: rgba(79, 142, 247, 0.75);
+    background: rgba(24, 24, 24, 0.549);
     color: #fff;
     font-size: 0.82rem;
     font-weight: 600;
@@ -173,13 +178,13 @@
 }
 
 .sb-pill:hover {
-    background: #4f8ef7;
+    background: #89b5ff85;
     transform: translateY(-1px);
 }
 
 .sb-pill.active {
-    background: #4f8ef7;
-    box-shadow: 0 0 0 2px rgba(79, 142, 247, 0.4);
+    background: #ae7bffb2;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.599);
 }
 
 /* ── Format pill wrapper (relative for dropdown) ── */

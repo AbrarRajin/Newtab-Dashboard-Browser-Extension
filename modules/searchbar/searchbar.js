@@ -121,9 +121,9 @@ export async function initSearchbar(container) {
       <!-- Quick pills -->
       <div class="sb-pills" id="sb-pills">
         <button class="sb-pill active" data-mode="default">Default</button>
-        <button class="sb-pill"        data-mode="ai">✦ AI Mode</button>
+        <button class="sb-pill"        data-mode="ai">AI Mode</button>
         <button class="sb-pill"        data-mode="chatgpt">ChatGPT</button>
-        <button class="sb-pill"        data-mode="youtube">▷ YouTube</button>
+        <button class="sb-pill"        data-mode="youtube">YouTube</button>
 
         <!-- Format dropdown pill -->
         <div class="sb-pill-format-wrap" id="sb-fmt-wrap">
@@ -202,7 +202,7 @@ export async function initSearchbar(container) {
 
     const MODE_LABELS = {
         default: { btn: 'Google', badge: '', placeholder: 'Search the web…' },
-        ai: { btn: 'Google', badge: '✦ AI Mode', placeholder: 'Ask Google AI…' },
+        ai: { btn: 'Google', badge: '✦ AI Mode', placeholder: 'Google Mode…' },
         chatgpt: { btn: 'Ask', badge: 'ChatGPT', placeholder: 'Ask ChatGPT…' },
         youtube: { btn: 'Search', badge: 'YouTube', placeholder: 'Search YouTube…' },
     };
@@ -289,7 +289,8 @@ export async function initSearchbar(container) {
                 url = (ENGINES[currentEngine] ?? ENGINES.google)(enc);
         }
 
-        window.open(url, '_blank');
+
+        window.location.href = url;
         closeSuggestions();
     }
 
