@@ -2,7 +2,13 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <link rel="icon" href="data:image/svg+xml,
+  <svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22>
+  <text y=%22.9em%22 font-size=%2290%22>🟢</text>
+  </svg>">
+
+
   <title>New Tab</title>
   <link rel="stylesheet" href="modules/gmail/gmail.css">
   <link rel="stylesheet" href="modules/weather/weather.css">
@@ -18,38 +24,76 @@
 
     body {
       min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      grid-template-rows: auto;
-      align-items: center;
-      justify-items: center;
-      gap: 32px;
-      padding: 40px;
       background: #0f0f0f;
       color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      gap: 32px;
     }
 
-    #module-football {
-      position: relative;
-      z-index: 1;
+    #module-searchbar {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    #module-quicklinks {
+      width: 100%;
+    }
+
+    #modules-grid {
+      margin-top: -40px;
+      /* pull the grid up updatev01 */
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 32px;
+      width: 100%;
+      padding-top: 18px;
+      /* room for the drag pill badges */
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Modules -->
-  <div id="module-searchbar" style="grid-column: 1 / -1;"></div>
-  <div id="module-quicklinks" style="grid-column: 1 / -1; width: 100%;"></div>
+  <!-- Static top rows — never draggable -->
   <div id="module-clock"></div>
-  <div id="module-weather" class="weather-module"></div>
-  <div id="module-gmail" class="gmail-module"></div>
-  <div id="module-football" class="fb-module-root"></div>
+  <div id="module-searchbar"></div>
+  <div id="module-quicklinks"></div>
+
+  <!-- Draggable card area -->
+  <!-- Each .grid-module is the drag wrapper. The inner div is what the module renders into. -->
+  <div id="modules-grid">
+
+    <div class="grid-module" id="gm-clock">
+      <div class="drag-handle"></div>
+      <div id="module-clock"></div>
+    </div>
+
+    <div class="grid-module" id="gm-weather">
+      <div class="drag-handle"></div>
+      <div id="module-weather" class="weather-module"></div>
+    </div>
+
+    <div class="grid-module" id="gm-gmail">
+      <div class="drag-handle"></div>
+      <div id="module-gmail" class="gmail-module"></div>
+    </div>
+
+    <div class="grid-module" id="gm-football">
+      <div class="drag-handle"></div>
+      <div id="module-football" class="fb-module-root"></div>
+    </div>
+
+  </div>
+
   <div id="module-background"></div>
 
-  <!-- Single entry point — newtab.js imports and inits everything including clock -->
   <script src="newtab.js" type="module"></script>
-
 </body>
 
 </html>
