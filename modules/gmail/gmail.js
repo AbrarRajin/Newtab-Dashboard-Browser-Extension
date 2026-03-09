@@ -318,6 +318,38 @@ async function showSettings(container, errorMsg = "") {
     });
 }
 
+// ── Auto-refresh timer ────────────────────────────────────────────────────────
+
+let autoRefreshInterval = null;
+const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
+
+function startAutoRefresh(container) {
+    // Clear any existing interval
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+
+    // Set up periodic refresh to keep token alive and emails fresh
+    autoRefreshInterval = setInterval(async () => {
+        const clientId = await storageGet(CLIENT_KEY);
+        if (!clientId) return;
+
+        // Check if we still have a valid token (within 10 minutes of expiry)
+        const stored = await storageGet(TOKEN_KEY);
+        const needsRefresh = !stored?.token || stored.expiry - Date.now() < 10 * 60 * 1000;
+
+        if (needsRefresh) {
+            // Token is expired or about to expire - trigger silent renewal
+            await clearCache();
+            initGmail(container, false); // false = silent, no popup
+        } else {
+            // Token is still good - just refresh emails
+            await clearCache();
+            initGmail(container, false);
+        }
+    }, AUTO_REFRESH_MS);
+}
+
 // ── Main init ─────────────────────────────────────────────────────────────────
 
 export async function initGmail(container, interactive = false) {
@@ -342,13 +374,20 @@ export async function initGmail(container, interactive = false) {
 
     // Cache hit
     const cached = await getCached();
-    if (cached) { renderEmails(container, cached); return; }
+    if (cached) {
+        renderEmails(container, cached);
+        // Start auto-refresh after successful render
+        startAutoRefresh(container);
+        return;
+    }
 
     // Fresh fetch
     try {
         const emails = await loadEmails(token);
         await setCache(emails);
         renderEmails(container, emails);
+        // Start auto-refresh after successful render
+        startAutoRefresh(container);
     } catch (e) {
         if (e.message === "auth_expired") {
             // Token was rejected by the API — nuke it and try a silent renew once
@@ -360,6 +399,8 @@ export async function initGmail(container, interactive = false) {
                     const emails = await loadEmails(fresh);
                     await setCache(emails);
                     renderEmails(container, emails);
+                    // Start auto-refresh after successful render
+                    startAutoRefresh(container);
                 } catch {
                     showOnboarding(container);
                 }

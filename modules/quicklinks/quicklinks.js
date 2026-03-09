@@ -156,35 +156,24 @@ const QL_CSS = `
 }
 .ql-icon img { width: 50px; height: 50px; object-fit: contain; }
 
-/* Sheen on the whole tile ───────────────────────── */
+/* Hover: scale + icon lift ──────────────────────── */
 .ql-link {
-  position: relative;
-  overflow: hidden;
+  transition: background 0.13s, transform 0.18s ease;
 }
-.ql-link::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    120deg,
-    rgba(255,255,255,0)   30%,
-    rgba(255,255,255,0.18) 50%,
-    rgba(255,255,255,0)   70%
-  );
-  transform: translateX(-100%) skewX(-25deg);
-  opacity: 0;
-  transition: transform 0.55s ease, opacity 0.25s ease;
-  pointer-events: none;
+.ql-link:hover {
+  background: rgba(255,255,255,0.07);
+  transform: translateY(-2px);
 }
-.ql-link:hover::after {
-  transform: translateX(150%) skewX(-25deg);
-  opacity: 1;
+.ql-link:active {
+  transform: translateY(0px);
+  transition-duration: 0.08s;
 }
 
-/* Subtle brightness lift on hover */
+.ql-icon img {
+  transition: filter 0.18s ease;
+}
 .ql-link:hover .ql-icon img {
-  filter: brightness(1.08);
-  transition: filter 0.3s ease;
+  filter: brightness(1.12) drop-shadow(0 2px 6px rgba(255,255,255,0.12));
 }
 
 .ql-lbl {
