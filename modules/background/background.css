@@ -292,3 +292,47 @@
     line-height: 1.4;
     margin: 0;
 }
+
+.bg-hint--warn {
+    color: rgba(255, 180, 80, 0.7);
+}
+
+/* ── Import label (styled like .bg-actions button) ───────────────────── */
+.bg-import-label {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    font-family: sans-serif;
+    transition: opacity 0.15s;
+    user-select: none;
+}
+
+.bg-import-label:hover {
+    opacity: 0.85;
+}
+
+.bg-import-label input[type="file"] {
+    display: none;
+}
+
+/* ── Backup status line ──────────────────────────────────────────────── */
+#bg-backup-status {
+    font-size: 0.72rem;
+    color: #7dd3a8;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+#bg-backup-status.hidden {
+    display: none;
+}
+
+#bg-backup-status.bg-status--error {
+    color: #ff8080;
+}

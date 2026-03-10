@@ -334,19 +334,18 @@ function startAutoRefresh(container) {
         const clientId = await storageGet(CLIENT_KEY);
         if (!clientId) return;
 
-        // Check if we still have a valid token (within 10 minutes of expiry)
+        // Proactively renew when < 5 min remain (one full cycle before expiry)
         const stored = await storageGet(TOKEN_KEY);
-        const needsRefresh = !stored?.token || stored.expiry - Date.now() < 10 * 60 * 1000;
+        const tokenExpiresSoon = !stored?.token || stored.expiry - Date.now() < 5 * 60 * 1000;
 
-        if (needsRefresh) {
-            // Token is expired or about to expire - trigger silent renewal
-            await clearCache();
-            initGmail(container, false); // false = silent, no popup
-        } else {
-            // Token is still good - just refresh emails
-            await clearCache();
-            initGmail(container, false);
+        if (tokenExpiresSoon) {
+            const renewed = await trySilentAuth(clientId);
+            if (!renewed) return; // Silent renewal failed — leave UI as-is, retry next cycle
         }
+
+        // Token is valid — fetch fresh emails
+        await clearCache();
+        initGmail(container, false);
     }, AUTO_REFRESH_MS);
 }
 

@@ -1,3 +1,5 @@
+import { exportSettings, importSettings } from "../settings/settings.js";
+
 // ── Background Module ─────────────────────────────────────────────────────
 // Stores the image as a base64 DataURL so it never needs re-downloading.
 // Falls back to storing the raw URL when fetching fails (e.g. CORS).
@@ -184,6 +186,22 @@ export async function initBackground(container) {
         <button id="bg-apply">Apply</button>
         <button id="bg-reset">Reset</button>
       </div>
+
+      <div class="bg-divider"></div>
+
+      <div class="bg-section">
+        <h3>Settings Backup</h3>
+        <div class="bg-actions">
+          <button id="bg-export-settings">⬇ Export</button>
+          <label class="bg-import-label">
+            ⬆ Import
+            <input type="file" id="bg-import-settings" accept=".json">
+          </label>
+        </div>
+        <p class="bg-hint bg-hint--warn">⚠ Export includes API keys — keep the file private.</p>
+        <p class="bg-status hidden" id="bg-backup-status"></p>
+      </div>
+
     </div>
   `;
 
@@ -335,6 +353,39 @@ export async function initBackground(container) {
         applyBg(null);
         await storeSet(STORAGE_KEY, null);
         showStatus('Reset ✓');
+    });
+
+    // ── Settings backup ───────────────────────────────────────────────────
+    const backupStatus = document.getElementById('bg-backup-status');
+
+    function showBackupStatus(msg, isError = false) {
+        backupStatus.textContent = msg;
+        backupStatus.classList.remove('hidden', 'bg-status--error');
+        if (isError) backupStatus.classList.add('bg-status--error');
+        if (msg) setTimeout(() => backupStatus.classList.add('hidden'), 3000);
+    }
+
+    document.getElementById('bg-export-settings').addEventListener('click', async () => {
+        try {
+            await exportSettings();
+            showBackupStatus('Exported ✓');
+        } catch (e) {
+            showBackupStatus('Export failed: ' + e.message, true);
+        }
+    });
+
+    document.getElementById('bg-import-settings').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+        showBackupStatus('Importing…');
+        try {
+            await importSettings(file);
+            showBackupStatus('Imported ✓ — reloading…');
+            setTimeout(() => location.reload(), 1200);
+        } catch (e) {
+            showBackupStatus(e.message, true);
+        }
     });
 
     // ── Status helper ─────────────────────────────────────────────────────
