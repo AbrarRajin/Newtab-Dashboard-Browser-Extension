@@ -22,13 +22,13 @@
 
 /* ── State highlights ── */
 .fb-card-live {
-    border-color: rgba(72, 199, 116, 0.55);
+    border: 5px solid rgba(72, 199, 116, 0.55);
     box-shadow: 0 0 18px rgba(72, 199, 116, 0.15), 0 0 60px rgba(72, 199, 116, 0.07);
 }
 
 .fb-card-soon {
 
-    border: 5px solid rgba(255, 70, 70, 0.952);
+    border: 5px solid rgba(255, 255, 255, 0.7);
     box-shadow: 0 0 18px rgba(255, 193, 7, 0.1);
 }
 
@@ -37,7 +37,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0px;
+    margin-bottom: 16px;
     position: relative;
 
 }
@@ -59,8 +59,8 @@
 }
 
 .fb-comp-logo {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     object-fit: contain;
     padding: 0px 22px 0px 0px;
 
@@ -102,8 +102,8 @@
 }
 
 .fb-crest {
-    width: 75px;
-    height: 75px;
+    width: 50px;
+    height: 50px;
     object-fit: contain;
 }
 
