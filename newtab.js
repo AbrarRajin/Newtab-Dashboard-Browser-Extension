@@ -5,6 +5,7 @@ import { initGmail } from "./modules/gmail/gmail.js";
 import { initSearchbar } from "./modules/searchbar/searchbar.js";
 import { initQuicklinks } from "./modules/quicklinks/quicklinks.js";
 import { initLayout } from "./modules/layout/layout.js";
+import { initPomodoro } from "./modules/pomodoro/pomodoro.js";
 import "./modules/clock/clock.js"; // ← was missing
 
 // Restore saved order before modules render (no visual flash)
@@ -16,3 +17,4 @@ initBackground(document.getElementById("module-background"));
 initGmail(document.getElementById("module-gmail"));
 initSearchbar(document.getElementById("module-searchbar"));
 initQuicklinks(document.getElementById("module-quicklinks"));
+initPomodoro(document.getElementById("module-pomodoro"));

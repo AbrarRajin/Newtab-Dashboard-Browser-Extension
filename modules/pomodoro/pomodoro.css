@@ -1,0 +1,231 @@
+/* ─── Pomodoro Timer Module ───────────────────────────────────────────────── */
+
+.pomo-module {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 20px 24px;
+    color: #fff;
+    font-family: inherit;
+    width: 450px;
+    min-height: 280px;
+    box-sizing: border-box;
+}
+
+/* ── Header ── */
+
+.pomo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.pomo-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.8;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pomo-btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: rgba(138, 138, 138, 0.25);
+    transition: color 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.pomo-btn-icon:hover {
+    color: #fff;
+}
+
+/* ── Ring ── */
+
+.pomo-ring-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.pomo-ring {
+    position: relative;
+    width: 160px;
+    height: 160px;
+}
+
+.pomo-ring svg {
+    transform: rotate(-90deg);
+}
+
+.pomo-ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 7;
+}
+
+.pomo-ring-fg {
+    fill: none;
+    stroke: #62e362;
+    stroke-width: 12;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease;
+}
+
+.pomo-ring-fg.inactive {
+    stroke: rgba(255, 255, 255, 0.25);
+}
+
+.pomo-ring-fg.phase-short {
+    stroke: #34d399;
+}
+
+.pomo-ring-fg.phase-long {
+    stroke: #a78bfa;
+}
+
+.pomo-time {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Phase label & session dots ── */
+
+.pomo-phase {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 8px;
+}
+
+.pomo-dots {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    margin-bottom: 20px;
+}
+
+.pomo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.pomo-dot.filled {
+    background: #4f8ef7;
+    border-color: #4f8ef7;
+}
+
+/* ── Controls ── */
+
+.pomo-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.pomo-btn {
+    flex: 1;
+    padding: 9px 12px;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    max-width: 130px;
+}
+
+.pomo-btn:hover {
+    opacity: 0.85;
+}
+
+.pomo-btn-primary {
+    background: #4f8df74d;
+    color: #fff;
+}
+
+.pomo-btn-secondary {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+/* ── Settings panel ── */
+
+.pomo-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.pomo-settings-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.pomo-label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.pomo-label-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.pomo-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.85rem;
+    padding: 7px 10px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.pomo-input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.pomo-settings-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.pomo-btn-save {
+    background: #4f8ef7;
+    color: #fff;
+}
+
+.pomo-btn-cancel {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}

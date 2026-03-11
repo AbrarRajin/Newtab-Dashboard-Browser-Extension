@@ -216,26 +216,12 @@ const QL_CSS = `
   transition: all 0.14s;
 }
 
-/* ── Add folder btn ──────────────────────────────── */
-.ql-folder-add-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 14px;
-  background: none;
-  border: 1px dashed rgba(255,255,255,0.13);
-  border-radius: 8px;
-  color: rgba(255,255,255,0.26);
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.14s;
-  align-self: center;
-  font-family: sans-serif;
-}
-.ql-folder-add-btn:hover {
-  border-color: rgba(255,255,255,0.35);
-  color: rgba(255,255,255,0.62);
+/* ── Link drag placeholder ───────────────────────── */
+.ql-drag-ph {
+  border: 2px dashed rgba(79,142,247,0.45);
+  border-radius: 12px;
+  background: rgba(79,142,247,0.07);
+  flex-shrink: 0;
 }
 
 /* ── Context menu ────────────────────────────────── */
@@ -348,6 +334,104 @@ const QL_CSS = `
 .ql-mbtn-s { background: rgba(255,255,255,0.08); color: #fff; }
 `;
 
+// ─── Link drag-to-reorder ─────────────────────────────────────────────────
+// Singleton state — only one link can be dragged at a time across all rows.
+
+let _qlDrag = null;
+
+function _qlGlobalDragInit() {
+  if (_qlGlobalDragInit._done) return;
+  _qlGlobalDragInit._done = true;
+
+  document.addEventListener('mousemove', e => {
+    if (!_qlDrag) return;
+    const s = _qlDrag;
+
+    if (!s.active) {
+      if (Math.hypot(e.clientX - s.x0, e.clientY - s.y0) < 6) return;
+      s.active = true;
+
+      // Placeholder keeps the gap
+      const r = s.el.getBoundingClientRect();
+      s.ph = document.createElement('div');
+      s.ph.className = 'ql-drag-ph';
+      s.ph.style.width  = s.el.offsetWidth  + 'px';
+      s.ph.style.height = s.el.offsetHeight + 'px';
+      s.el.after(s.ph);
+
+      // Floating clone
+      s.clone = s.el.cloneNode(true);
+      Object.assign(s.clone.style, {
+        position: 'fixed', pointerEvents: 'none', zIndex: '9999',
+        width: r.width + 'px', left: r.left + 'px', top: r.top + 'px',
+        opacity: '0.88', transform: 'scale(1.07)', transition: 'none',
+        borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+      });
+      document.body.appendChild(s.clone);
+      s.el.style.opacity = '0';
+    }
+
+    s.clone.style.left = (e.clientX - s.ox) + 'px';
+    s.clone.style.top  = (e.clientY - s.oy) + 'px';
+    _qlMovePh(s.row, s.ph, s.el, e.clientX, e.clientY);
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!_qlDrag) return;
+    const s = _qlDrag;
+    _qlDrag = null;
+    if (!s.active) return;
+
+    // Prevent the click that follows mouseup from navigating
+    s.el.addEventListener('click', e => e.preventDefault(), { once: true });
+
+    const addPh = s.row.querySelector('.ql-add-ph');
+    const slots  = [...s.row.children].filter(el => el !== addPh);
+    const newIdx = slots.indexOf(s.ph);
+
+    s.ph.remove();
+    s.clone.remove();
+    s.el.style.opacity = '';
+
+    if (newIdx === -1) return;
+    const oldIdx = s.folder.links.findIndex(l => l.id === s.el.dataset.lid);
+    if (oldIdx === -1 || oldIdx === newIdx) return;
+
+    const [link] = s.folder.links.splice(oldIdx, 1);
+    s.folder.links.splice(newIdx, 0, link);
+    s.save();
+    s.redraw();
+  });
+}
+
+function _qlMovePh(row, ph, dragEl, mx, my) {
+  const addPh = row.querySelector('.ql-add-ph');
+  const items  = [...row.children].filter(el => el !== ph && el !== dragEl && el !== addPh);
+  let target   = addPh;
+  for (const item of items) {
+    const r = item.getBoundingClientRect();
+    if (my < r.top + r.height / 2) { target = item; break; }
+    if (my < r.bottom && mx < r.left + r.width / 2) { target = item; break; }
+  }
+  if (ph.nextSibling !== target) row.insertBefore(ph, target);
+}
+
+function _qlInitRowDrag(row, folder, save, redraw) {
+  _qlGlobalDragInit();
+  row.addEventListener('mousedown', e => {
+    const link = e.target.closest('.ql-link');
+    if (!link) return;
+    e.preventDefault(); // suppress browser native drag & text-select
+    const r = link.getBoundingClientRect();
+    _qlDrag = {
+      el: link, row, folder, save, redraw,
+      x0: e.clientX, y0: e.clientY,
+      ox: e.clientX - r.left, oy: e.clientY - r.top,
+      active: false, ph: null, clone: null,
+    };
+  });
+}
+
 // ─── Module entry point ────────────────────────────────────────────────────
 export async function initQuicklinks(el) {
   let data = await qlGet() ?? { activeId: null, cats: [] };
@@ -416,8 +500,7 @@ export async function initQuicklinks(el) {
             </div>
           </div>
         </div>`
-      ).join('') +
-      `<button class="ql-folder-add-btn" id="ql-add-folder">＋ Add Folder</button>`;
+      ).join('');
 
     // Link clicks & right-clicks
     body.querySelectorAll('.ql-link').forEach(a => {
@@ -437,9 +520,11 @@ export async function initQuicklinks(el) {
       div.addEventListener('click', () => openModal({ type: 'link', catId: cat.id, folderId: div.dataset.fid }))
     );
 
-    document.getElementById('ql-add-folder')?.addEventListener('click', () =>
-      openModal({ type: 'folder', catId: cat.id })
-    );
+    // Drag-to-reorder links within each folder row
+    body.querySelectorAll('.ql-links').forEach(row => {
+      const folder = cat.folders.find(f => f.id === row.dataset.fid);
+      if (folder) _qlInitRowDrag(row, folder, save, drawBody);
+    });
   }
 
   function linkHtml(l, fid) {
@@ -513,6 +598,7 @@ export async function initQuicklinks(el) {
 
   function catCtx(e, catId) {
     iH = {
+      addfolder: () => openModal({ type: 'folder', catId }),
       rename: () => { const c = data.cats.find(c => c.id === catId); if (c) openModal({ type: 'cat', edit: c }); },
       del: () => {
         data.cats = data.cats.filter(c => c.id !== catId);
@@ -521,6 +607,7 @@ export async function initQuicklinks(el) {
       }
     };
     openCtx(e, [
+      { label: '＋  Add Folder', a: 'addfolder' },
       { label: '✏️  Rename', a: 'rename' },
       { sep: true },
       { label: '🗑  Delete Category', a: 'del', danger: true }

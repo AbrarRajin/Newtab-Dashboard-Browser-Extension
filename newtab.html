@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="modules/gmail/gmail.css">
   <link rel="stylesheet" href="modules/weather/weather.css">
   <link rel="stylesheet" href="modules/football/football.css">
+  <link rel="stylesheet" href="modules/pomodoro/pomodoro.css">
   <style>
     *,
     *::before,
@@ -69,11 +70,6 @@
   <!-- Each .grid-module is the drag wrapper. The inner div is what the module renders into. -->
   <div id="modules-grid">
 
-    <div class="grid-module" id="gm-clock">
-      <div class="drag-handle"></div>
-      <div id="module-clock"></div>
-    </div>
-
     <div class="grid-module" id="gm-weather">
       <div class="drag-handle"></div>
       <div id="module-weather" class="weather-module"></div>
@@ -87,6 +83,11 @@
     <div class="grid-module" id="gm-football">
       <div class="drag-handle"></div>
       <div id="module-football" class="fb-module-root"></div>
+    </div>
+
+    <div class="grid-module" id="gm-pomodoro">
+      <div class="drag-handle"></div>
+      <div id="module-pomodoro" class="pomo-module"></div>
     </div>
 
   </div>

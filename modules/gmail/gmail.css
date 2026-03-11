@@ -9,6 +9,7 @@
     /* was 20px 24px */
     color: #fff;
     width: 420px;
+    min-height: 340px;
     box-sizing: border-box;
     font-family: inherit;
 }

@@ -23,18 +23,20 @@ function aggregateForecast(list) {
     for (const slot of list) {
         const date = new Date(slot.dt * 1000).toDateString();
         if (!days[date]) {
-            days[date] = { dt: slot.dt, temps: [], icons: [], descriptions: [] };
+            days[date] = { dt: slot.dt, temps: [], icons: [], descriptions: [], pops: [] };
         }
         days[date].temps.push(slot.main.temp);
         days[date].icons.push(slot.weather[0].icon);
         days[date].descriptions.push(slot.weather[0].description);
+        days[date].pops.push(slot.pop ?? 0);
     }
     return Object.values(days).slice(0, 5).map(d => ({
         day: formatDay(d.dt),
-        icon: d.icons[Math.floor(d.icons.length / 2)],   // mid-day icon
+        icon: d.icons[Math.floor(d.icons.length / 2)],
         min: Math.round(Math.min(...d.temps)),
         max: Math.round(Math.max(...d.temps)),
         description: d.descriptions[Math.floor(d.descriptions.length / 2)],
+        pop: Math.round(Math.max(...d.pops) * 100),
     }));
 }
 
@@ -80,6 +82,7 @@ async function fetchWeather(lat, lon, key, unit) {
 function renderWeather(container, current, forecastList, unit) {
     const sym = tempUnit(unit);
     const { temp, humidity, wind_speed } = { ...current.main, wind_speed: current.wind.speed };
+    const todayPop = forecastList[0]?.pop ?? 0;
 
     container.innerHTML = `
     <div class="w-header">
@@ -92,6 +95,11 @@ function renderWeather(container, current, forecastList, unit) {
       <div class="w-temp-main">${Math.round(temp)}${sym}</div>
       <div class="w-condition">${current.weather[0].description}</div>
       <div class="w-meta">
+        <div class="w-meta-row">
+          <span>🌧</span>
+          <div class="w-precip-bar"><div class="w-precip-fill" style="width:${todayPop}%"></div></div>
+          <span>${todayPop}%</span>
+        </div>
         <span>💧 ${humidity}%</span>
         <span>💨 ${Math.round(wind_speed)} ${unit === "imperial" ? "mph" : "m/s"}</span>
       </div>

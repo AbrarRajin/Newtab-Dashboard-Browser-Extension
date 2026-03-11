@@ -18,6 +18,8 @@ export const EXPORT_KEYS = [
     'fb_pid',               // football team ID
     'fb_gmt',               // football GMT offset
     'fb_css',               // football custom CSS
+    'pomo_settings',        // pomodoro durations + options
+    'dashboard_modules_v1', // module visibility toggles
 ];
 
 // ── Storage helpers ────────────────────────────────────────────────────────
