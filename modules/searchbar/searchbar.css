@@ -83,24 +83,38 @@
     background: #191919;
 }
 
-/* ── Settings button ── */
+/* ── Pills row (mode group + gear) ── */
+.sb-pills-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* ── Settings button (now outside the input bar) ── */
 .sb-settings-btn {
     background: none;
     border: none;
     cursor: pointer;
     font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.25);
     transition: color 0.2s;
-    padding: 0 20px 0 20px;
-    /* extra right padding for better click area */
-    margin-left: 8px;
-    margin-right: 8px;
+    padding: 6px;
     line-height: 1;
     flex-shrink: 0;
 }
 
 .sb-settings-btn:hover {
-    color: #fff;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── Filetype toggle checkbox ── */
+.sb-toggle-check {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #4f8ef7;
+    flex-shrink: 0;
 }
 
 /* ── Suggestions dropdown ── */
@@ -152,50 +166,111 @@
     flex-shrink: 0;
 }
 
-/* ── Quick action pills ── */
+.hidden { display: none !important; }
+
+/* ── Quick action pills row ── */
 .sb-pills {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 10px;
     justify-content: center;
     align-items: center;
-    position: relative;
-    z-index: 1;
 }
 
-.sb-pill {
-    padding: 7px 16px;
-    border-radius: 999px;
-    border: none;
-    background: rgba(24, 24, 24, 0.549);
-    color: #fff;
-    font-size: 0.82rem;
-    font-weight: 600;
+/* ── Mode radio group ── */
+.sb-pills-group {
+    display: flex;
+    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.2);
+    padding: 0.25rem;
+    box-sizing: border-box;
+}
+
+.sb-radio {
+    flex: 1 1 auto;
+    text-align: center;
+}
+
+.sb-radio input[type="radio"] {
+    display: none;
+}
+
+.sb-radio-name {
+    display: flex;
     cursor: pointer;
-    transition: background 0.18s, transform 0.12s;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.35rem;
+    padding: 0.45rem 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.15s ease, background 0.15s ease;
+    font-family: inherit;
+    font-size: 0.82rem;
+    user-select: none;
+}
+
+.sb-radio input[type="radio"]:checked + .sb-radio-name {
+    background: rgba(255, 255, 255, 0.92);
+    color: #374151;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.sb-radio-name:hover {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.sb-radio input[type="radio"]:checked + .sb-radio-name:hover {
+    color: #374151;
+}
+
+/* ── Standalone format pill ── */
+.sb-pill-format-wrap .sb-pill,
+.sb-pill-format-wrap .sb-pill-standalone {
+    padding: 0.45rem 1rem;
+    box-sizing: border-box;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
     font-family: inherit;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.2);
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
-.sb-pill:hover {
-    background: #89b5ff85;
-    transform: translateY(-1px);
+.sb-pill-format-wrap .sb-pill:hover,
+.sb-pill-format-wrap .sb-pill-standalone:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.95);
 }
 
-.sb-pill.active {
-    background: #ae7bffb2;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.599);
+.sb-pill-format-wrap .sb-pill.active,
+.sb-pill-format-wrap .sb-pill-standalone.active {
+    background: rgba(255, 255, 255, 0.92);
+    color: #374151;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
+
 
 /* ── Format pill wrapper (relative for dropdown) ── */
 .sb-pill-format-wrap {
     position: relative;
-}
-
-.sb-pill-format-wrap .sb-pill {
-    display: flex;
-    align-items: center;
-    gap: 5px;
 }
 
 /* ── Format dropdown ── */
@@ -266,22 +341,6 @@
     display: block;
 }
 
-/* ── Settings button ── */
-.sb-settings-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 0.95rem;
-    color: rgba(138, 138, 138, 0.158);
-    transition: color 0.2s;
-    padding: 0;
-    line-height: 1;
-    flex-shrink: 0;
-}
-
-.sb-settings-btn:hover {
-    color: #fff;
-}
 
 /* ── Settings panel ── */
 .sb-settings-panel {
