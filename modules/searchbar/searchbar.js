@@ -85,6 +85,7 @@ export async function initSearchbar(container) {
     const saved = await storeGet(SB_KEY) ?? {};
     let currentEngine = saved.engine ?? 'google';
     let currentCSS = saved.css ?? '';
+    let showFiletype = saved.showFiletype ?? false;
     applyCustomCSS(currentCSS);
 
     // ── Inject CSS ───────────────────────────────────────────────────────────
@@ -111,37 +112,42 @@ export async function initSearchbar(container) {
                type="text" placeholder="Search the web…"
                autocomplete="off" spellcheck="false">
         <span class="sb-mode-badge" id="sb-mode-badge"></span>
-        <button class="sb-go-btn"       id="sb-go-btn">Google</button>
-        <button class="sb-settings-btn" id="sb-settings-btn" title="Search settings">⚙</button>
+        <button class="sb-go-btn" id="sb-go-btn">Google</button>
       </div>
 
       <!-- Suggestions anchored to wrapper, not input-row -->
       <div class="sb-suggestions" id="sb-suggestions"></div>
 
-      <!-- Quick pills -->
-      <div class="sb-pills" id="sb-pills">
-        <button class="sb-pill active" data-mode="default">Default</button>
-        <button class="sb-pill"        data-mode="ai">AI Mode</button>
-        <button class="sb-pill"        data-mode="chatgpt">ChatGPT</button>
-        <button class="sb-pill"        data-mode="youtube">YouTube</button>
+      <!-- Pills row: mode group + optional filetype + settings gear -->
+      <div class="sb-pills-row">
+        <div class="sb-pills" id="sb-pills">
+          <div class="sb-pills-group" id="sb-pills-group">
+            <label class="sb-radio"><input type="radio" name="sb-mode" value="default" checked><span class="sb-radio-name">Default</span></label>
+            <label class="sb-radio"><input type="radio" name="sb-mode" value="ai"><span class="sb-radio-name">AI Mode</span></label>
+            <label class="sb-radio"><input type="radio" name="sb-mode" value="chatgpt"><span class="sb-radio-name">ChatGPT</span></label>
+            <label class="sb-radio"><input type="radio" name="sb-mode" value="youtube"><span class="sb-radio-name">YouTube</span></label>
+          </div>
 
-        <!-- Format dropdown pill -->
-        <div class="sb-pill-format-wrap" id="sb-fmt-wrap">
-          <button class="sb-pill" id="sb-fmt-btn">
-            <span id="sb-fmt-label">Specific Format</span>
-            <span>▾</span>
-          </button>
-          <div class="sb-format-dropdown" id="sb-fmt-dropdown">
-            <div class="sb-format-item" data-ext="" data-label="None">
-              <span>— None —</span>
+          <!-- Format dropdown pill (visibility controlled by settings toggle) -->
+          <div class="sb-pill-format-wrap ${showFiletype ? '' : 'hidden'}" id="sb-fmt-wrap">
+            <button class="sb-pill sb-pill-standalone" id="sb-fmt-btn">
+              <span id="sb-fmt-label">Specific Format</span>
+              <span>▾</span>
+            </button>
+            <div class="sb-format-dropdown" id="sb-fmt-dropdown">
+              <div class="sb-format-item" data-ext="" data-label="None">
+                <span>— None —</span>
+              </div>
+              ${FORMATS.map(f => `
+                <div class="sb-format-item" data-ext="${f.ext}" data-label="${f.label}">
+                  <span>${f.label}</span>
+                  <span class="sb-format-label">filetype:${f.ext}</span>
+                </div>`).join('')}
             </div>
-            ${FORMATS.map(f => `
-              <div class="sb-format-item" data-ext="${f.ext}" data-label="${f.label}">
-                <span>${f.label}</span>
-                <span class="sb-format-label">filetype:${f.ext}</span>
-              </div>`).join('')}
           </div>
         </div>
+
+        <button class="sb-settings-btn" id="sb-settings-btn" title="Search settings">⚙</button>
       </div>
 
       <!-- Settings panel -->
@@ -156,6 +162,16 @@ export async function initSearchbar(container) {
               <option value="duckduckgo" ${currentEngine === 'duckduckgo' ? 'selected' : ''}>DuckDuckGo</option>
               <option value="brave"      ${currentEngine === 'brave' ? 'selected' : ''}>Brave</option>
             </select>
+          </div>
+        </div>
+
+        <div class="sb-divider"></div>
+
+        <div class="sb-settings-section">
+          <h3>Pills</h3>
+          <div class="sb-engine-row">
+            <span>Show filetype filter</span>
+            <input type="checkbox" class="sb-toggle-check" id="sb-filetype-toggle" ${showFiletype ? 'checked' : ''}>
           </div>
         </div>
 
@@ -186,7 +202,7 @@ export async function initSearchbar(container) {
     const goBtn = document.getElementById('sb-go-btn');
     const modeBadge = document.getElementById('sb-mode-badge');
     const suggestBox = document.getElementById('sb-suggestions');
-    const pillBtns = document.querySelectorAll('.sb-pill[data-mode]');
+    const pillRadios = document.querySelectorAll('.sb-pills-group input[name="sb-mode"]');
     const fmtWrap = document.getElementById('sb-fmt-wrap');
     const fmtBtn = document.getElementById('sb-fmt-btn');
     const fmtLabel = document.getElementById('sb-fmt-label');
@@ -194,6 +210,7 @@ export async function initSearchbar(container) {
     const settingsBtn = document.getElementById('sb-settings-btn');
     const settingsPanel = document.getElementById('sb-settings-panel');
     const engineSel = document.getElementById('sb-engine-sel');
+    const filetypeToggle = document.getElementById('sb-filetype-toggle');
     const cssInput = document.getElementById('sb-css-input');
     const applyBtn = document.querySelector('.sb-apply-btn');
     const resetBtn = document.querySelector('.sb-reset-btn');
@@ -218,7 +235,7 @@ export async function initSearchbar(container) {
         // Update engine label for default mode
         if (m === 'default') updateGoBtnLabel();
 
-        pillBtns.forEach(p => p.classList.toggle('active', p.dataset.mode === m));
+        pillRadios.forEach(r => { if (r.value === m) r.checked = true; });
         // Format pill stays independent
         if (m !== 'default' && m !== 'ai') {
             // format still works for all modes that hit Google
@@ -232,7 +249,7 @@ export async function initSearchbar(container) {
         }
     }
 
-    pillBtns.forEach(p => p.addEventListener('click', () => setMode(p.dataset.mode)));
+    pillRadios.forEach(r => r.addEventListener('change', () => setMode(r.value)));
 
     // ── Format dropdown ───────────────────────────────────────────────────────
 
@@ -383,11 +400,23 @@ export async function initSearchbar(container) {
         updateGoBtnLabel();
     });
 
+    filetypeToggle.addEventListener('change', () => {
+        showFiletype = filetypeToggle.checked;
+        fmtWrap.classList.toggle('hidden', !showFiletype);
+        if (!showFiletype) {
+            selectedFmt = null;
+            fmtLabel.textContent = 'Specific Format';
+            fmtBtn.classList.remove('active');
+            fmtDropdown.classList.remove('open');
+        }
+    });
+
     applyBtn.addEventListener('click', async () => {
         currentCSS = cssInput.value.trim();
         currentEngine = engineSel.value;
+        showFiletype = filetypeToggle.checked;
         applyCustomCSS(currentCSS);
-        await storeSet(SB_KEY, { engine: currentEngine, css: currentCSS });
+        await storeSet(SB_KEY, { engine: currentEngine, css: currentCSS, showFiletype });
         settingsPanel.classList.remove('open');
         updateGoBtnLabel();
     });
@@ -396,7 +425,7 @@ export async function initSearchbar(container) {
         cssInput.value = '';
         currentCSS = '';
         applyCustomCSS('');
-        await storeSet(SB_KEY, { engine: currentEngine, css: '' });
+        await storeSet(SB_KEY, { engine: currentEngine, css: '', showFiletype });
     });
 
     // ── Close panels on outside click ─────────────────────────────────────────
