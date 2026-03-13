@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 const QL_STORE = 'quicklinks_v1';
+const QL_FAV_CACHE = 'ql_favicon_cache';
 
 const qlUid = () => Math.random().toString(36).slice(2, 9);
 const qlFav = url => { try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64`; } catch { return ''; } };
@@ -22,6 +23,55 @@ function qlSet(v) {
     try { chrome.storage.local.set({ [QL_STORE]: v }, r); }
     catch { localStorage.setItem(QL_STORE, JSON.stringify(v)); r(); }
   });
+}
+
+// ─── Favicon cache (persisted, keyed by icon URL) ─────────────────────────
+let _qlFavCache = null; // null = not yet loaded
+
+function _qlFavCacheGet() {
+  return new Promise(r => {
+    try { chrome.storage.local.get(QL_FAV_CACHE, d => r(d[QL_FAV_CACHE] ?? {})); }
+    catch { try { r(JSON.parse(localStorage.getItem(QL_FAV_CACHE)) ?? {}); } catch { r({}); } }
+  });
+}
+function _qlFavCacheSet(cache) {
+  return new Promise(r => {
+    try { chrome.storage.local.set({ [QL_FAV_CACHE]: cache }, r); }
+    catch { localStorage.setItem(QL_FAV_CACHE, JSON.stringify(cache)); r(); }
+  });
+}
+
+async function qlFavCacheInit() {
+  if (_qlFavCache) return;
+  _qlFavCache = await _qlFavCacheGet();
+}
+
+// Returns cached data URL synchronously, or the original URL as fallback.
+function qlFavSync(iconUrl) {
+  if (!iconUrl) return '';
+  return _qlFavCache?.[iconUrl] ?? iconUrl;
+}
+
+// Fetches iconUrl, caches it as a data URL, then updates imgEl.src.
+// No-ops if already cached (qlFavSync already handled it in the HTML).
+async function qlFavEnsureCached(iconUrl, imgEl) {
+  if (!iconUrl || !imgEl || _qlFavCache?.[iconUrl]) return;
+  try {
+    const resp = await fetch(iconUrl);
+    if (!resp.ok) return;
+    const blob = await resp.blob();
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    if (_qlFavCache) _qlFavCache[iconUrl] = dataUrl;
+    await _qlFavCacheSet(_qlFavCache);
+    if (imgEl.isConnected) imgEl.src = dataUrl;
+  } catch {
+    // keep the original URL already in img.src
+  }
 }
 
 // ─── Embedded CSS ─────────────────────────────────────────────────────────
@@ -434,6 +484,7 @@ function _qlInitRowDrag(row, folder, save, redraw) {
 
 // ─── Module entry point ────────────────────────────────────────────────────
 export async function initQuicklinks(el) {
+  await qlFavCacheInit();
   let data = await qlGet() ?? { activeId: null, cats: [] };
   if (!data.cats.find(c => c.id === data.activeId))
     data.activeId = data.cats[0]?.id ?? null;
@@ -502,6 +553,12 @@ export async function initQuicklinks(el) {
         </div>`
       ).join('');
 
+    // Cache any icons not yet stored
+    body.querySelectorAll('.ql-link').forEach(a => {
+      const img = a.querySelector('.ql-icon img');
+      if (img && a.dataset.icon) qlFavEnsureCached(a.dataset.icon, img);
+    });
+
     // Link clicks & right-clicks
     body.querySelectorAll('.ql-link').forEach(a => {
       a.addEventListener('contextmenu', e => {
@@ -528,9 +585,10 @@ export async function initQuicklinks(el) {
   }
 
   function linkHtml(l, fid) {
-    const icon = l.iconUrl || qlFav(l.url);
-    return `<a class="ql-link" data-lid="${l.id}" data-fid="${fid}" data-url="${esc(l.url)}" href="${esc(l.url)}" title="${esc(l.title)}">
-      <div class="ql-icon"><img src="${esc(icon)}" onerror="this.parentElement.textContent='🔗'" alt=""></div>
+    const iconUrl = l.iconUrl || qlFav(l.url);
+    const src = qlFavSync(iconUrl); // cached data URL or original URL
+    return `<a class="ql-link" data-lid="${l.id}" data-fid="${fid}" data-url="${esc(l.url)}" data-icon="${esc(iconUrl)}" href="${esc(l.url)}" title="${esc(l.title)}">
+      <div class="ql-icon"><img src="${esc(src)}" onerror="this.parentElement.textContent='🔗'" alt=""></div>
       <span class="ql-lbl">${esc(l.title)}</span>
     </a>`;
   }
