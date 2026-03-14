@@ -219,7 +219,7 @@ export async function initSearchbar(container) {
 
     const MODE_LABELS = {
         default: { btn: 'Google', badge: '', placeholder: 'Search the web…' },
-        ai: { btn: 'Google', badge: '✦ AI Mode', placeholder: 'Google Mode…' },
+        ai: { btn: 'Google', badge: 'AI Mode', placeholder: 'Google Mode…' },
         chatgpt: { btn: 'Ask', badge: 'ChatGPT', placeholder: 'Ask ChatGPT…' },
         youtube: { btn: 'Search', badge: 'YouTube', placeholder: 'Search YouTube…' },
     };
@@ -231,6 +231,7 @@ export async function initSearchbar(container) {
         input.placeholder = cfg.placeholder;
         modeBadge.textContent = cfg.badge;
         modeBadge.classList.toggle('visible', !!cfg.badge);
+        modeBadge.dataset.mode = m;
 
         // Update engine label for default mode
         if (m === 'default') updateGoBtnLabel();

@@ -75,7 +75,7 @@
     transition: background 0.2s, opacity 0.15s;
     white-space: nowrap;
     font-family: inherit;
-    min-width: 80px;
+    width: 90px;
     text-align: center;
 }
 
@@ -339,6 +339,21 @@
 
 .sb-mode-badge.visible {
     display: block;
+}
+
+.sb-mode-badge[data-mode="youtube"] {
+    background: rgba(255, 0, 0, 0.18);
+    color: #ff6b6b;
+}
+
+.sb-mode-badge[data-mode="chatgpt"] {
+    background: rgba(147, 51, 234, 0.2);
+    color: #c084fc;
+}
+
+.sb-mode-badge[data-mode="ai"] {
+    background: rgba(79, 142, 247, 0.25);
+    color: #7eb8ff;
 }
 
 

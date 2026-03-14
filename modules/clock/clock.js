@@ -45,7 +45,7 @@ function tick() {
   if (settings.showSeconds) timeParts.push(pad(now.getSeconds()));
 
   timeEl.textContent = timeParts.join(':') + suffix;
-  dateEl.textContent = `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
+  dateEl.textContent = `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
 }
 
 function startTick() {

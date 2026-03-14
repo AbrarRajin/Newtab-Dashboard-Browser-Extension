@@ -81,6 +81,16 @@
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -0.02em;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.w-feels-like {
+    font-size: 0.8rem;
+    font-weight: 400;
+    opacity: 0.55;
+    letter-spacing: 0;
 }
 
 .w-condition {

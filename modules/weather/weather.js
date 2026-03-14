@@ -81,7 +81,7 @@ async function fetchWeather(lat, lon, key, unit) {
 
 function renderWeather(container, current, forecastList, unit) {
     const sym = tempUnit(unit);
-    const { temp, humidity, wind_speed } = { ...current.main, wind_speed: current.wind.speed };
+    const { temp, feels_like, humidity, wind_speed } = { ...current.main, wind_speed: current.wind.speed };
     const todayPop = forecastList[0]?.pop ?? 0;
 
     container.innerHTML = `
@@ -92,7 +92,7 @@ function renderWeather(container, current, forecastList, unit) {
 
     <div class="w-current">
       <img class="w-icon-lg" src="${owmIconUrl(current.weather[0].icon)}" alt="${current.weather[0].description}">
-      <div class="w-temp-main">${Math.round(temp)}${sym}</div>
+      <div class="w-temp-main">${Math.round(temp)}${sym}<span class="w-feels-like">feels like ${Math.round(feels_like)}${sym}</span></div>
       <div class="w-condition">${current.weather[0].description}</div>
       <div class="w-meta">
         <div class="w-meta-row">

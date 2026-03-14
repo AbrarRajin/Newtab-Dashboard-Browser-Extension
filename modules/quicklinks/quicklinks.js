@@ -90,49 +90,59 @@ const QL_CSS = `
 #ql-catbar {
   display: flex;
   align-items: center;
-  justify-content: center; 
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
   flex-wrap: wrap;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.2);
+  padding: 4px;
+  box-sizing: border-box;
 }
 
 .ql-cat {
-  padding: 5px 18px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.38rem 1rem;
+  background: transparent;
+  border: none;
   border-radius: 999px;
-  color: rgba(255,255,255,0.5);
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.14s;
-  font-family: sans-serif;
+  transition: color 0.15s ease, background 0.15s ease;
+  font-family: inherit;
+  white-space: nowrap;
+  user-select: none;
 }
 .ql-cat:hover:not(.ql-cat-on) {
-  background: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.85);
+  color: rgba(255,255,255,0.95);
 }
 .ql-cat-on {
-  background: rgba(79,142,247,0.18);
-  border-color: rgba(79,142,247,0.65);
-  color: #fff;
+  background: rgba(255,255,255,0.92);
+  color: #374151;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 .ql-cat-add {
-  padding: 5px 14px;
+  padding: 0.38rem 0.75rem;
   background: none;
-  border: 1px dashed rgba(255,255,255,0.18);
+  border: none;
   border-radius: 999px;
-  color: rgba(255,255,255,0.28);
-  font-size: 0.73rem;
-  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.82rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.14s;
-  font-family: sans-serif;
+  transition: color 0.15s ease, background 0.15s ease;
+  font-family: inherit;
 }
 .ql-cat-add:hover {
-  border-color: rgba(255,255,255,0.4);
-  color: rgba(255,255,255,0.65);
+  color: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.08);
 }
 
 /* ── Body ─────────────────────────────────────────── */
