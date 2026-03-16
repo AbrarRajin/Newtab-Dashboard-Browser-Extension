@@ -161,6 +161,13 @@
     display: none;
 }
 
+.fb-ampm {
+    font-size: 0.65em;
+    font-weight: 600;
+    opacity: 0.6;
+    letter-spacing: 0.05em;
+}
+
 
 /* ── Badges ── */
 .fb-badge {
@@ -188,6 +195,14 @@
     font-variant-numeric: tabular-nums;
     min-width: 116px;
     justify-content: center;
+    white-space: nowrap;
+}
+
+.fb-badge-upcoming {
+    background: rgba(100, 160, 255, 0.10);
+    color: rgba(180, 210, 255, 0.65);
+    border: 1px solid rgba(100, 160, 255, 0.22);
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 

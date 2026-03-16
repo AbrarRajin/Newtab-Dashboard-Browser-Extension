@@ -37,12 +37,16 @@ function applyGMT(utcDate, gmtOffset) {
     const d = new Date(new Date(utcDate).getTime() + gmtOffset * 3_600_000);
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const rawH = d.getUTCHours();
+    const ampm = rawH < 12 ? 'AM' : 'PM';
+    const h12 = rawH % 12 || 12;
     return {
         day: days[d.getUTCDay()],
         date: d.getUTCDate(),
         month: months[d.getUTCMonth()],
-        hh: String(d.getUTCHours()).padStart(2, '0'),
+        hh: String(h12),
         mm: String(d.getUTCMinutes()).padStart(2, '0'),
+        ampm,
     };
 }
 
@@ -59,9 +63,11 @@ function matchStatus(utcDate) {
 function fmtCountdown(utcDate) {
     const diff = new Date(utcDate).getTime() - Date.now();
     if (diff <= 0) return null;
-    const h = Math.floor(diff / 3_600_000);
+    const d = Math.floor(diff / 86_400_000);
+    const h = Math.floor((diff % 86_400_000) / 3_600_000);
     const m = Math.floor((diff % 3_600_000) / 60_000);
     const s = Math.floor((diff % 60_000) / 1000);
+    if (d > 0) return `${d}d ${h}h`;
     return h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
@@ -120,6 +126,8 @@ function renderMatch(container, match, gmtOffset) {
         badgeHtml = `<span class="fb-badge fb-badge-live">● LIVE</span>`;
     } else if (status === 'soon') {
         badgeHtml = `<span class="fb-badge fb-badge-soon" id="fb-countdown">…</span>`;
+    } else if (status === 'upcoming') {
+        badgeHtml = `<span class="fb-badge fb-badge-upcoming" id="fb-days">…</span>`;
     }
 
     container.innerHTML = `
@@ -141,7 +149,7 @@ function renderMatch(container, match, gmtOffset) {
                 <div class="fb-center">
                     <div class="fb-vs">VS</div>
                     <div class="fb-date-line">${t.day}, ${t.date} ${t.month}</div>
-                    <div class="fb-time-line">${t.hh}:${t.mm}<span class="fb-gmt"> GMT${sign}${gmtOffset}</span></div>
+                    <div class="fb-time-line">${t.hh}:${t.mm}<span class="fb-ampm"> ${t.ampm}</span><span class="fb-gmt"> GMT${sign}${gmtOffset}</span></div>
                     ${badgeHtml}
                 </div>
 
@@ -166,12 +174,17 @@ function renderMatch(container, match, gmtOffset) {
     }
 
     if (status === 'upcoming') {
-        _ticker = setInterval(() => {
+        const el = document.getElementById('fb-days');
+        const update = () => {
+            const cd = fmtCountdown(match.utcDate);
+            if (el && cd) el.textContent = `📅 ${cd}`;
             if (matchStatus(match.utcDate) !== 'upcoming') {
                 clearTicker();
                 renderMatch(container, match, gmtOffset);
             }
-        }, 60_000);
+        };
+        update();
+        _ticker = setInterval(update, 60_000);
     }
 
     $('#fb-settings-btn', container).addEventListener('click', () => showSettings(container));
