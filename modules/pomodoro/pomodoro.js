@@ -246,7 +246,7 @@ export async function initPomodoro(container) {
 
 <div class="pomo-ring-wrap">
   <div class="pomo-ring">
-    <svg width="160" height="160" viewBox="0 0 160 160">
+    <svg width="100%" height="100%" viewBox="0 0 160 160">
       <circle class="pomo-ring-bg" cx="80" cy="80" r="${RADIUS}"/>
       <circle class="pomo-ring-fg ${phaseClass()}${!running && !hasStarted ? ' inactive' : ''}" cx="80" cy="80" r="${RADIUS}"
         style="stroke-dasharray:${CIRCUMFERENCE};stroke-dashoffset:${ringOffset(remaining / totalSeconds)}"/>

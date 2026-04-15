@@ -87,6 +87,16 @@ async function fetchNextMatch(teamId, apiKey) {
     return matches[0];
 }
 
+async function fetchLastMatch(teamId, apiKey) {
+    const res = await fetch(`${FB_BASE}/teams/${teamId}/matches?status=FINISHED&limit=5`, {
+        headers: { 'X-Auth-Token': apiKey }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const matches = (data.matches || []).sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate));
+    return matches[0] || null;
+}
+
 // ── Cache ─────────────────────────────────────────────────────────────────────
 
 async function getCachedMatch() {
@@ -100,6 +110,17 @@ async function getCachedMatch() {
 
 async function setCachedMatch(match) {
     await storageSet({ fb_cache: { timestamp: Date.now(), match } });
+}
+
+async function getCachedLastMatch() {
+    const { fb_last_cache } = await storageGet(['fb_last_cache']);
+    if (!fb_last_cache) return null;
+    if (Date.now() - fb_last_cache.timestamp > CACHE_TTL_MS) return null;
+    return fb_last_cache.match;
+}
+
+async function setCachedLastMatch(match) {
+    await storageSet({ fb_last_cache: { timestamp: Date.now(), match } });
 }
 
 // ── Ticker ────────────────────────────────────────────────────────────────────
@@ -188,6 +209,36 @@ function renderMatch(container, match, gmtOffset) {
     }
 
     $('#fb-settings-btn', container).addEventListener('click', () => showSettings(container));
+}
+
+function renderLastResult(container, match, gmtOffset, trackedTeamId) {
+    const home = match.homeTeam;
+    const away = match.awayTeam;
+    const score = match.score?.fullTime;
+    const winner = match.score?.winner;
+
+    const isHome = String(home.id) === String(trackedTeamId);
+    let outcome = 'D', badgeClass = 'fb-result-badge-draw';
+    if (winner === 'HOME_TEAM') {
+        outcome = isHome ? 'W' : 'L';
+        badgeClass = isHome ? 'fb-result-badge-win' : 'fb-result-badge-loss';
+    } else if (winner === 'AWAY_TEAM') {
+        outcome = isHome ? 'L' : 'W';
+        badgeClass = isHome ? 'fb-result-badge-loss' : 'fb-result-badge-win';
+    }
+
+    const homeName = home.shortName || home.name;
+    const awayName = away.shortName || away.name;
+    const scoreStr = `${score?.home ?? '?'} – ${score?.away ?? '?'}`;
+
+    const html = `
+        <div class="fb-result-section">
+            <span class="fb-result-label">Last</span>
+            <span class="fb-result-teams">${homeName} <strong>${scoreStr}</strong> ${awayName}</span>
+            <span class="fb-badge ${badgeClass}">${outcome}</span>
+        </div>
+    `;
+    container.querySelector('.fb-card').insertAdjacentHTML('beforeend', html);
 }
 
 function renderError(container, msg) {
@@ -280,7 +331,7 @@ function showSettings(container, errorMsg = '') {
             const pid = $('#fb-s-pid', container).value.trim();
             const gmt = parseFloat($('#fb-s-gmt', container).value);
             const css = $('#fb-s-css', container).value;
-            await storageSet({ fb_key: key, fb_pid: pid, fb_gmt: gmt, fb_css: css, fb_cache: null });
+            await storageSet({ fb_key: key, fb_pid: pid, fb_gmt: gmt, fb_css: css, fb_cache: null, fb_last_cache: null });
             applyCustomCSS(css);
             initFootball(container);
         });
@@ -307,16 +358,25 @@ export async function initFootball(container) {
 
     // Try cache first
     const cached = await getCachedMatch();
+    const cachedLast = await getCachedLastMatch();
     if (cached) {
         renderMatch(container, cached, gmtOffset);
+        if (cachedLast) renderLastResult(container, cachedLast, gmtOffset, pid);
         return;
     }
 
     // Cache miss — fetch from API
     try {
-        const match = await fetchNextMatch(pid, key);
+        const [match, lastMatch] = await Promise.all([
+            fetchNextMatch(pid, key),
+            fetchLastMatch(pid, key),
+        ]);
         await setCachedMatch(match);
         renderMatch(container, match, gmtOffset);
+        if (lastMatch) {
+            await setCachedLastMatch(lastMatch);
+            renderLastResult(container, lastMatch, gmtOffset, pid);
+        }
     } catch (e) {
         const msgs = {
             invalid_key: '❌ API key rejected. Check your key — new keys take up to 2 hours to activate.',

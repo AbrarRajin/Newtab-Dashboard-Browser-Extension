@@ -10,7 +10,7 @@
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 16px;
 
-    padding: 0px 16px 50px 16px;
+    padding: 0px 16px 18px 16px;
     /* top right bottom left */
 
     color: #fff;
@@ -218,6 +218,58 @@
     50% {
         opacity: 0.55;
     }
+}
+
+/* ── Last result strip (inside .fb-card) ── */
+.fb-result-section {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fb-result-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.35;
+    flex-shrink: 0;
+}
+
+.fb-result-teams {
+    flex: 1;
+    font-size: 0.75rem;
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fb-result-teams strong {
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    opacity: 1;
+}
+
+.fb-result-badge-win {
+    background: rgba(72, 199, 116, 0.15);
+    color: #4cd98a;
+    border: 1px solid rgba(72, 199, 116, 0.35);
+}
+
+.fb-result-badge-loss {
+    background: rgba(255, 80, 80, 0.12);
+    color: #ff8080;
+    border: 1px solid rgba(255, 80, 80, 0.3);
+}
+
+.fb-result-badge-draw {
+    background: rgba(255, 193, 7, 0.10);
+    color: #ffd54f;
+    border: 1px solid rgba(255, 193, 7, 0.3);
 }
 
 /* ── Loading / error ── */
