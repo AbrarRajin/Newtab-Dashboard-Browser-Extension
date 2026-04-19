@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "WebFetch(domain:sportsapipro.com)",
-      "WebFetch(domain:api.sportsapipro.com)",
-      "WebFetch(domain:developers.sportsapipro.com)"
-    ]
-  }
-}
