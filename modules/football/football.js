@@ -233,9 +233,21 @@ function renderLastResult(container, match, gmtOffset, trackedTeamId) {
 
     const html = `
         <div class="fb-result-section">
-            <span class="fb-result-label">Last</span>
-            <span class="fb-result-teams">${homeName} <strong>${scoreStr}</strong> ${awayName}</span>
-            <span class="fb-badge ${badgeClass}">${outcome}</span>
+            <span class="fb-result-label">Last Result</span>
+            <div class="fb-result-matchup">
+                <div class="fb-result-team">
+                    ${home.crest ? `<img class="fb-result-crest" src="${home.crest}" alt="">` : ''}
+                    <span class="fb-result-team-name">${homeName}</span>
+                </div>
+                <div class="fb-result-center">
+                    <span class="fb-result-score">${scoreStr}</span>
+                    <span class="fb-badge ${badgeClass}">${outcome}</span>
+                </div>
+                <div class="fb-result-team">
+                    ${away.crest ? `<img class="fb-result-crest" src="${away.crest}" alt="">` : ''}
+                    <span class="fb-result-team-name">${awayName}</span>
+                </div>
+            </div>
         </div>
     `;
     container.querySelector('.fb-card').insertAdjacentHTML('beforeend', html);
