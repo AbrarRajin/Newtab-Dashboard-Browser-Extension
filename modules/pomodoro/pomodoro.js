@@ -244,25 +244,27 @@ export async function initPomodoro(container) {
   <button class="pomo-btn-icon pomo-settings-btn" title="Settings">⚙</button>
 </div>
 
-<div class="pomo-ring-wrap">
-  <div class="pomo-ring">
-    <svg width="100%" height="100%" viewBox="0 0 160 160">
-      <circle class="pomo-ring-bg" cx="80" cy="80" r="${RADIUS}"/>
-      <circle class="pomo-ring-fg ${phaseClass()}${!running && !hasStarted ? ' inactive' : ''}" cx="80" cy="80" r="${RADIUS}"
-        style="stroke-dasharray:${CIRCUMFERENCE};stroke-dashoffset:${ringOffset(remaining / totalSeconds)}"/>
-    </svg>
-    <div class="pomo-time">${fmt(remaining)}</div>
+<div class="pomo-body">
+  <div class="pomo-ring-wrap">
+    <div class="pomo-ring">
+      <svg width="100%" height="100%" viewBox="0 0 160 160">
+        <circle class="pomo-ring-bg" cx="80" cy="80" r="${RADIUS}"/>
+        <circle class="pomo-ring-fg ${phaseClass()}${!running && !hasStarted ? ' inactive' : ''}" cx="80" cy="80" r="${RADIUS}"
+          style="stroke-dasharray:${CIRCUMFERENCE};stroke-dashoffset:${ringOffset(remaining / totalSeconds)}"/>
+      </svg>
+      <div class="pomo-time">${fmt(remaining)}</div>
+    </div>
   </div>
-</div>
 
-<div class="pomo-phase">${phaseLabel()}</div>
-<div class="pomo-dots">${dots}</div>
+  <div class="pomo-phase">${phaseLabel()}</div>
+  <div class="pomo-dots">${dots}</div>
 
-<div class="pomo-controls">
-  <button class="pomo-btn pomo-btn-primary pomo-play-btn">
-    ${running ? '⏸ Pause' : '▶ Start'}
-  </button>
-  <button class="pomo-btn pomo-btn-secondary pomo-reset-btn">↺ Reset</button>
+  <div class="pomo-controls">
+    <button class="pomo-btn pomo-btn-primary pomo-play-btn">
+      ${running ? '⏸ Pause' : '▶ Start'}
+    </button>
+    <button class="pomo-btn pomo-btn-secondary pomo-reset-btn">↺ Reset</button>
+  </div>
 </div>`;
 
         container.querySelector('.pomo-play-btn').addEventListener('click', () => {

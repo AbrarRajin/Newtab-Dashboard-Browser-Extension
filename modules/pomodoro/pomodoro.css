@@ -10,6 +10,15 @@
     font-family: inherit;
     width: 450px;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.pomo-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 /* ── Header ── */
@@ -54,8 +63,8 @@
 
 .pomo-ring {
     position: relative;
-    width: 110px;
-    height: 110px;
+    width: 150px;
+    height: 150px;
 }
 
 .pomo-ring svg {
