@@ -1,15 +1,13 @@
 // ─── Gmail Module ───────────────────────────────────────────────────────────
-// Uses Gmail API v1 via chrome.identity.launchWebAuthFlow — each user
-// supplies their own OAuth client ID. Nothing is hardcoded.
+// Uses Gmail API v1 via chrome.identity.getAuthToken — the official Chrome
+// Extension OAuth flow. The OAuth client ID is declared in manifest.json
+// under the "oauth2" key; Chrome manages token acquisition and refresh.
 // ───────────────────────────────────────────────────────────────────────────
 
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
 const CACHE_KEY = "gmail_cache";
-const TOKEN_KEY = "gmail_token";   // { token, expiry }
-const CLIENT_KEY = "gmail_client_id";
 const CSS_KEY = "gmail_css";
 const CACHE_TTL = 3 * 60 * 1000;  // 3 minutes
-const SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
 
 function $(sel, ctx = document) { return ctx.querySelector(sel); }
 
@@ -25,68 +23,26 @@ function applyCustomCSS(css) {
     tag.textContent = css || "";
 }
 
-// ── OAuth via launchWebAuthFlow ───────────────────────────────────────────────
+// ── OAuth via chrome.identity.getAuthToken ────────────────────────────────────
+// Chrome handles token caching, silent renewal, and the sign-in popup.
+// No manual token storage or expiry tracking required.
 
-async function getToken(clientId, interactive = false) {
-    // Return cached token if still valid (2-min buffer)
-    const stored = await storageGet(TOKEN_KEY);
-    if (stored?.token && stored.expiry - Date.now() > 2 * 60 * 1000) {
-        return stored.token;
-    }
-
-    // Always try a silent re-auth first — no popup, no user friction.
-    // Google reissues a fresh token automatically if the user's Google
-    // session is still alive (which it almost always is). This is the
-    // fix for the hourly logout: instead of giving up when the 1-hour
-    // token expires, we silently renew it.
-    const silent = await trySilentAuth(clientId);
-    if (silent) return silent;
-
-    // Silent failed — only show the popup if explicitly requested
-    if (!interactive) throw new Error("no_token");
-
-    return doAuthFlow(clientId, true);
-}
-
-async function trySilentAuth(clientId) {
-    try {
-        return await doAuthFlow(clientId, false);
-    } catch {
-        return null;
-    }
-}
-
-function doAuthFlow(clientId, interactive) {
-    const redirectUrl = chrome.identity.getRedirectURL();
-    const authUrl = new URL("https://accounts.google.com/o/oauth2/auth");
-    authUrl.searchParams.set("client_id", clientId);
-    authUrl.searchParams.set("response_type", "token");
-    authUrl.searchParams.set("redirect_uri", redirectUrl);
-    authUrl.searchParams.set("scope", SCOPE);
-    // Only force account picker on explicit user-triggered sign-in
-    if (interactive) authUrl.searchParams.set("prompt", "select_account");
-
+function getToken(interactive = false) {
     return new Promise((res, rej) => {
-        chrome.identity.launchWebAuthFlow(
-            { url: authUrl.toString(), interactive },
-            async (responseUrl) => {
-                if (chrome.runtime.lastError || !responseUrl) {
-                    rej(new Error(chrome.runtime.lastError?.message || "auth_cancelled"));
-                    return;
-                }
-                const params = new URLSearchParams(new URL(responseUrl).hash.slice(1));
-                const token = params.get("access_token");
-                const expiresIn = parseInt(params.get("expires_in") || "3600", 10);
-                if (!token) { rej(new Error("no_access_token")); return; }
-                await storageSet(TOKEN_KEY, { token, expiry: Date.now() + expiresIn * 1000 });
-                res(token);
+        chrome.identity.getAuthToken({ interactive }, (token) => {
+            if (chrome.runtime.lastError || !token) {
+                rej(new Error(chrome.runtime.lastError?.message || "no_token"));
+                return;
             }
-        );
+            res(token);
+        });
     });
 }
 
-async function revokeToken() {
-    await storageRemove(TOKEN_KEY);
+// Evict a stale token from Chrome's cache so the next getAuthToken call
+// fetches a fresh one. Call this when the API returns 401.
+function removeCachedToken(token) {
+    return new Promise(res => chrome.identity.removeCachedAuthToken({ token }, res));
 }
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
@@ -208,40 +164,12 @@ function renderError(container, msg) {
     $("#gm-settings", container).addEventListener("click", () => showSettings(container));
 }
 
-// ── Render: onboarding (no client ID stored yet) ──────────────────────────────
-
-function showSetup(container) {
-    container.innerHTML = `
-        <div class="gm-header">
-          <div class="gm-title"><span class="gm-title-icon">✉️</span> Gmail</div>
-        </div>
-        <div class="gm-onboarding">
-          <div class="gm-onboard-icon">📬</div>
-          <h3>Connect Gmail</h3>
-          <p>Paste your OAuth Client ID to get started.</p>
-          <input class="gm-settings-input" id="gm-setup-id" type="text"
-                 placeholder="xxxx.apps.googleusercontent.com">
-          <a class="gm-settings-link" href="https://console.cloud.google.com/apis/credentials"
-             target="_blank">Get a Client ID ↗</a>
-          <button class="gm-btn" id="gm-setup-save">Connect</button>
-          <p class="gm-note">Read-only access. Your emails never leave your browser.</p>
-        </div>`;
-
-    $("#gm-setup-save", container).addEventListener("click", async () => {
-        const id = $("#gm-setup-id", container).value.trim();
-        if (!id) return;
-        await storageSet(CLIENT_KEY, id);
-        initGmail(container, true);
-    });
-}
-
-// ── Render: sign-in prompt (client ID exists, but no token) ──────────────────
+// ── Render: sign-in prompt ────────────────────────────────────────────────────
 
 function showOnboarding(container) {
     container.innerHTML = `
         <div class="gm-header">
           <div class="gm-title"><span class="gm-title-icon">✉️</span> Gmail</div>
-          <button class="gm-btn-icon" id="gm-settings" title="Settings">⚙</button>
         </div>
         <div class="gm-onboarding">
           <div class="gm-onboard-icon">📬</div>
@@ -252,13 +180,11 @@ function showOnboarding(container) {
         </div>`;
 
     $("#gm-signin", container).addEventListener("click", () => initGmail(container, true));
-    $("#gm-settings", container).addEventListener("click", () => showSettings(container));
 }
 
 // ── Render: settings panel ────────────────────────────────────────────────────
 
-async function showSettings(container, errorMsg = "") {
-    const clientId = await storageGet(CLIENT_KEY);
+async function showSettings(container) {
     const css = await storageGet(CSS_KEY);
 
     container.innerHTML = `
@@ -266,16 +192,6 @@ async function showSettings(container, errorMsg = "") {
           <div class="gm-title"><span class="gm-title-icon">⚙️</span> Gmail Settings</div>
         </div>
         <div class="gm-settings">
-          ${errorMsg ? `<p class="gm-error" style="margin:0">${errorMsg}</p>` : ""}
-
-          <label class="gm-settings-label">OAuth Client ID
-            <input class="gm-settings-input" id="gm-s-clientid" type="text"
-                   placeholder="xxxx.apps.googleusercontent.com"
-                   value="${clientId || ""}">
-            <a class="gm-settings-link" href="https://console.cloud.google.com/apis/credentials"
-               target="_blank">Google Cloud Console ↗</a>
-          </label>
-
           <label class="gm-settings-label">Custom CSS
             <textarea class="gm-settings-input gm-settings-css" id="gm-s-css"
                       spellcheck="false"
@@ -285,34 +201,31 @@ async function showSettings(container, errorMsg = "") {
           </label>
 
           <div class="gm-settings-actions">
-            <button class="gm-btn" id="gm-s-save">Save & Reload</button>
+            <button class="gm-btn" id="gm-s-save">Save</button>
             <button class="gm-btn gm-btn-secondary" id="gm-s-cancel">Cancel</button>
           </div>
 
           <div class="gm-settings-danger">
             <button class="gm-btn gm-btn-danger" id="gm-s-signout">Sign out</button>
           </div>
-
-          <p class="gm-note" style="text-align:center">Client ID and token are stored locally — never shared.</p>
         </div>`;
 
     $("#gm-s-save", container).addEventListener("click", async () => {
-        const newId = $("#gm-s-clientid", container).value.trim();
         const newCss = $("#gm-s-css", container).value;
-        if (!newId) {
-            showSettings(container, "Client ID cannot be empty.");
-            return;
-        }
-        await storageSet(CLIENT_KEY, newId);
         await storageSet(CSS_KEY, newCss);
         applyCustomCSS(newCss);
         await clearCache();
-        initGmail(container, true);
+        initGmail(container);
     });
 
     $("#gm-s-cancel", container).addEventListener("click", () => initGmail(container));
+
     $("#gm-s-signout", container).addEventListener("click", async () => {
-        await revokeToken();
+        // Evict the cached token from Chrome so the next sign-in starts fresh
+        try {
+            const token = await getToken(false);
+            await removeCachedToken(token);
+        } catch { /* already signed out or no cached token */ }
         await clearCache();
         showOnboarding(container);
     });
@@ -324,26 +237,10 @@ let autoRefreshInterval = null;
 const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 
 function startAutoRefresh(container) {
-    // Clear any existing interval
-    if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-    }
-
-    // Set up periodic refresh to keep token alive and emails fresh
+    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    // Chrome's getAuthToken handles silent token renewal automatically,
+    // so each periodic refresh just re-runs the normal init path.
     autoRefreshInterval = setInterval(async () => {
-        const clientId = await storageGet(CLIENT_KEY);
-        if (!clientId) return;
-
-        // Proactively renew when < 5 min remain (one full cycle before expiry)
-        const stored = await storageGet(TOKEN_KEY);
-        const tokenExpiresSoon = !stored?.token || stored.expiry - Date.now() < 5 * 60 * 1000;
-
-        if (tokenExpiresSoon) {
-            const renewed = await trySilentAuth(clientId);
-            if (!renewed) return; // Silent renewal failed — leave UI as-is, retry next cycle
-        }
-
-        // Token is valid — fetch fresh emails
         await clearCache();
         initGmail(container, false);
     }, AUTO_REFRESH_MS);
@@ -352,30 +249,29 @@ function startAutoRefresh(container) {
 // ── Main init ─────────────────────────────────────────────────────────────────
 
 export async function initGmail(container, interactive = false) {
-    // Apply any saved custom CSS immediately
     const css = await storageGet(CSS_KEY);
     if (css) applyCustomCSS(css);
-
-    // No client ID yet — show first-time setup
-    const clientId = await storageGet(CLIENT_KEY);
-    if (!clientId) { showSetup(container); return; }
 
     container.innerHTML = `<div class="gm-loading">Loading emails…</div>`;
 
     let token;
     try {
-        token = await getToken(clientId, interactive);
+        token = await getToken(interactive);
     } catch (e) {
-        // Silent re-auth failed AND no interactive request → show sign-in prompt
-        showOnboarding(container);
+        if (interactive) {
+            // Sign-in was explicitly requested but failed — surface the reason
+            renderError(container, `⚠️ Sign-in failed: ${e.message}`);
+        } else {
+            // No cached token, non-interactive — show sign-in prompt
+            showOnboarding(container);
+        }
         return;
     }
 
-    // Cache hit
+    // Cache hit — render immediately
     const cached = await getCached();
     if (cached) {
         renderEmails(container, cached);
-        // Start auto-refresh after successful render
         startAutoRefresh(container);
         return;
     }
@@ -385,25 +281,18 @@ export async function initGmail(container, interactive = false) {
         const emails = await loadEmails(token);
         await setCache(emails);
         renderEmails(container, emails);
-        // Start auto-refresh after successful render
         startAutoRefresh(container);
     } catch (e) {
         if (e.message === "auth_expired") {
-            // Token was rejected by the API — nuke it and try a silent renew once
-            await revokeToken();
-            await clearCache();
-            const fresh = await trySilentAuth(clientId);
-            if (fresh) {
-                try {
-                    const emails = await loadEmails(fresh);
-                    await setCache(emails);
-                    renderEmails(container, emails);
-                    // Start auto-refresh after successful render
-                    startAutoRefresh(container);
-                } catch {
-                    showOnboarding(container);
-                }
-            } else {
+            // API rejected the token — evict it from Chrome's cache and retry once
+            await removeCachedToken(token);
+            try {
+                const fresh = await getToken(false);
+                const emails = await loadEmails(fresh);
+                await setCache(emails);
+                renderEmails(container, emails);
+                startAutoRefresh(container);
+            } catch {
                 showOnboarding(container);
             }
         } else {
