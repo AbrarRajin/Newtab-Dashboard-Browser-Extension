@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "My Dashboard",
+  "name": "Lumen Newtab",
   "version": "1.0",
   "description": "My personal dashboard as a new tab page",
   "chrome_url_overrides": {
