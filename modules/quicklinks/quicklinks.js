@@ -7,6 +7,8 @@
 
 const QL_STORE = 'quicklinks_v1';
 const QL_FAV_CACHE = 'ql_favicon_cache';
+const QL_CSS_KEY = 'ql_custom_css';
+const QL_NEWTAB_KEY = 'ql_open_newtab';
 
 const qlUid = () => Math.random().toString(36).slice(2, 9);
 const qlFav = url => { try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64`; } catch { return ''; } };
@@ -23,6 +25,31 @@ function qlSet(v) {
     try { chrome.storage.local.set({ [QL_STORE]: v }, r); }
     catch { localStorage.setItem(QL_STORE, JSON.stringify(v)); r(); }
   });
+}
+
+// Generic key/value helpers (used for CSS and other per-key settings)
+function _qlKvGet(key) {
+  return new Promise(r => {
+    try { chrome.storage.local.get(key, d => r(d[key] ?? null)); }
+    catch { try { r(localStorage.getItem(key)); } catch { r(null); } }
+  });
+}
+function _qlKvSet(key, val) {
+  return new Promise(r => {
+    try { chrome.storage.local.set({ [key]: val }, r); }
+    catch { localStorage.setItem(key, val); r(); }
+  });
+}
+
+// ─── Custom CSS injection ──────────────────────────────────────────────────
+function applyCustomCSS(css) {
+  let tag = document.getElementById('ql-custom-style');
+  if (!tag) {
+    tag = document.createElement('style');
+    tag.id = 'ql-custom-style';
+    document.head.appendChild(tag);
+  }
+  tag.textContent = css || '';
 }
 
 // ─── Favicon cache (persisted, keyed by icon URL) ─────────────────────────
@@ -392,6 +419,145 @@ const QL_CSS = `
 .ql-mbtn:hover { opacity: 0.85; }
 .ql-mbtn-p { background: #4f8ef7; color: #fff; }
 .ql-mbtn-s { background: rgba(255,255,255,0.08); color: #fff; }
+
+/* ── Catbar settings button ───────────────────────── */
+.ql-settings-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.22);
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 0.38rem 0.6rem;
+  border-radius: 999px;
+  transition: color 0.15s ease, background 0.15s ease;
+  line-height: 1;
+  margin-left: 2px;
+  font-family: inherit;
+}
+.ql-settings-btn:hover {
+  color: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.08);
+}
+
+/* ── Settings panel ───────────────────────────────── */
+#ql-settings-panel {
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+  font-family: sans-serif;
+}
+.ql-sp-header {
+  display: flex;
+  align-items: center;
+}
+.ql-sp-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  color: #fff;
+}
+.ql-sp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ql-sp-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.8rem;
+  opacity: 0.8;
+  color: #fff;
+}
+.ql-sp-textarea {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px;
+  color: #7dd3a8;
+  font-size: 0.77rem;
+  padding: 8px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  resize: vertical;
+  min-height: 140px;
+  font-family: 'Courier New', monospace;
+  line-height: 1.5;
+  transition: border-color 0.2s;
+}
+.ql-sp-textarea:focus { border-color: rgba(255,255,255,0.35); }
+.ql-sp-note {
+  font-size: 0.67rem;
+  opacity: 0.38;
+  line-height: 1.5;
+}
+.ql-sp-note code {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  padding: 0 3px;
+  font-size: 0.9em;
+}
+.ql-sp-actions { display: flex; gap: 8px; }
+
+/* ── Settings toggle ──────────────────────────────── */
+.ql-sp-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  cursor: pointer;
+  color: #fff;
+  font-size: 0.82rem;
+  opacity: 0.85;
+  user-select: none;
+}
+.ql-sp-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.ql-sp-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.ql-sp-toggle-track {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.12);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: background 0.2s, border-color 0.2s;
+  cursor: pointer;
+}
+.ql-sp-toggle-track::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  transition: left 0.18s ease, background 0.2s;
+}
+.ql-sp-toggle input:checked + .ql-sp-toggle-track {
+  background: #4f8ef7;
+  border-color: #4f8ef7;
+}
+.ql-sp-toggle input:checked + .ql-sp-toggle-track::after {
+  left: calc(100% - 16px);
+  background: #fff;
+}
 `;
 
 // ─── Link drag-to-reorder ─────────────────────────────────────────────────
@@ -492,9 +658,62 @@ function _qlInitRowDrag(row, folder, save, redraw) {
   });
 }
 
+// ─── Settings panel ────────────────────────────────────────────────────────
+async function showSettings(el) {
+  const [css, savedNewtab] = await Promise.all([_qlKvGet(QL_CSS_KEY), _qlKvGet(QL_NEWTAB_KEY)]);
+  const newtabOn = savedNewtab === true || savedNewtab === 'true';
+
+  el.innerHTML = `
+    <div id="ql-settings-panel">
+      <div class="ql-sp-header">
+        <span class="ql-sp-title">⚙ Quick Links — Settings</span>
+      </div>
+      <div class="ql-sp-body">
+        <label class="ql-sp-toggle-row">
+          <span>Open links in new tab</span>
+          <span class="ql-sp-toggle">
+            <input type="checkbox" id="ql-sp-newtab"${newtabOn ? ' checked' : ''}>
+            <span class="ql-sp-toggle-track"></span>
+          </span>
+        </label>
+        <label class="ql-sp-label">Custom CSS
+          <textarea class="ql-sp-textarea" id="ql-sp-css" spellcheck="false"
+            placeholder="#ql-catbar { background: rgba(30,20,60,0.8); }"
+          >${esc(css || '')}</textarea>
+          <span class="ql-sp-note">
+            Target <code>#ql-root</code>, <code>#ql-catbar</code>, <code>#ql-body</code>,
+            <code>.ql-cat</code>, <code>.ql-cat-on</code>, <code>.ql-folder</code>,
+            <code>.ql-folder-name</code>, <code>.ql-link</code>, <code>.ql-icon</code>,
+            <code>.ql-lbl</code>, <code>.ql-add-box</code>
+          </span>
+        </label>
+        <div class="ql-sp-actions">
+          <button class="ql-mbtn ql-mbtn-p" id="ql-sp-save">Save</button>
+          <button class="ql-mbtn ql-mbtn-s" id="ql-sp-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('ql-sp-save')?.addEventListener('click', async () => {
+    const newCss = document.getElementById('ql-sp-css')?.value ?? '';
+    const newNewtab = document.getElementById('ql-sp-newtab')?.checked ?? false;
+    await Promise.all([
+      _qlKvSet(QL_CSS_KEY, newCss),
+      _qlKvSet(QL_NEWTAB_KEY, newNewtab),
+    ]);
+    applyCustomCSS(newCss);
+    initQuicklinks(el);
+  });
+
+  document.getElementById('ql-sp-cancel')?.addEventListener('click', () => initQuicklinks(el));
+}
+
 // ─── Module entry point ────────────────────────────────────────────────────
 export async function initQuicklinks(el) {
   await qlFavCacheInit();
+  const [savedCss, savedNewtab] = await Promise.all([_qlKvGet(QL_CSS_KEY), _qlKvGet(QL_NEWTAB_KEY)]);
+  if (savedCss) applyCustomCSS(savedCss);
+  const openInNewTab = savedNewtab === true || savedNewtab === 'true';
   let data = await qlGet() ?? { activeId: null, cats: [] };
   if (!data.cats.find(c => c.id === data.activeId))
     data.activeId = data.cats[0]?.id ?? null;
@@ -530,13 +749,15 @@ export async function initQuicklinks(el) {
       data.cats.map(c =>
         `<button class="ql-cat${c.id === data.activeId ? ' ql-cat-on' : ''}" data-id="${c.id}">${esc(c.name)}</button>`
       ).join('') +
-      `<button class="ql-cat-add" id="ql-cat-add"> ＋ </button>`;
+      `<button class="ql-cat-add" id="ql-cat-add"> ＋ </button>` +
+      `<button class="ql-settings-btn" id="ql-settings-btn" title="Settings">⚙</button>`;
 
     bar.querySelectorAll('.ql-cat').forEach(btn => {
       btn.addEventListener('click', () => { data.activeId = btn.dataset.id; save(); drawCatbar(); drawBody(); });
       btn.addEventListener('contextmenu', e => { e.preventDefault(); catCtx(e, btn.dataset.id); });
     });
     document.getElementById('ql-cat-add')?.addEventListener('click', () => openModal({ type: 'cat' }));
+    document.getElementById('ql-settings-btn')?.addEventListener('click', () => showSettings(el));
   }
 
   function drawBody() {
@@ -597,7 +818,8 @@ export async function initQuicklinks(el) {
   function linkHtml(l, fid) {
     const iconUrl = l.iconUrl || qlFav(l.url);
     const src = qlFavSync(iconUrl); // cached data URL or original URL
-    return `<a class="ql-link" data-lid="${l.id}" data-fid="${fid}" data-url="${esc(l.url)}" data-icon="${esc(iconUrl)}" href="${esc(l.url)}" title="${esc(l.title)}">
+    const target = openInNewTab ? ' target="_blank" rel="noopener noreferrer"' : '';
+    return `<a class="ql-link" data-lid="${l.id}" data-fid="${fid}" data-url="${esc(l.url)}" data-icon="${esc(iconUrl)}" href="${esc(l.url)}" title="${esc(l.title)}"${target}>
       <div class="ql-icon"><img src="${esc(src)}" onerror="this.parentElement.textContent='🔗'" alt=""></div>
       <span class="ql-lbl">${esc(l.title)}</span>
     </a>`;

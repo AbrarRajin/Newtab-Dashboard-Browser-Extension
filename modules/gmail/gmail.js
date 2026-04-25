@@ -7,7 +7,9 @@
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
 const CACHE_KEY = "gmail_cache";
 const CSS_KEY = "gmail_css";
-const CACHE_TTL = 3 * 60 * 1000;  // 3 minutes
+const REFRESH_KEY = "gmail_refresh_ms";
+const CACHE_TTL = 3 * 60 * 1000;      // 3 minutes
+const DEFAULT_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 
 function $(sel, ctx = document) { return ctx.querySelector(sel); }
 
@@ -62,10 +64,12 @@ function storageRemove(key) {
 async function getCached() {
     const c = await storageGet(CACHE_KEY);
     if (!c || Date.now() - c.ts > CACHE_TTL) return null;
-    return c.emails;
+    return c; // { emails, ts }
 }
 async function setCache(emails) {
-    await storageSet(CACHE_KEY, { emails, ts: Date.now() });
+    const ts = Date.now();
+    await storageSet(CACHE_KEY, { emails, ts });
+    return ts;
 }
 async function clearCache() {
     await storageRemove(CACHE_KEY);
@@ -95,9 +99,19 @@ function formatDate(dateStr) {
     const d = new Date(dateStr);
     const now = new Date();
     const isToday = d.toDateString() === now.toDateString();
-    return isToday
-        ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        : d.toLocaleDateString([], { month: "short", day: "numeric" });
+    const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (isToday) return time;
+    const date = d.toLocaleDateString([], { month: "short", day: "numeric" });
+    return `${date}, ${time}`;
+}
+
+function timeAgo(ts) {
+    const diff = Math.floor((Date.now() - ts) / 1000); // seconds
+    if (diff < 60) return "just now";
+    const mins = Math.floor(diff / 60);
+    if (mins < 60) return `${mins} min ago`;
+    const hrs = Math.floor(mins / 60);
+    return hrs === 1 ? "1 hr ago" : `${hrs} hrs ago`;
 }
 
 async function loadEmails(token) {
@@ -120,9 +134,30 @@ async function loadEmails(token) {
     });
 }
 
+// ── Last-refreshed ticker ─────────────────────────────────────────────────────
+
+let lastRefreshTickInterval = null;
+
+function startRefreshTick(container, fetchTs) {
+    if (lastRefreshTickInterval) clearInterval(lastRefreshTickInterval);
+    const update = () => {
+        const el = $("#gm-last-refresh", container);
+        if (el) el.textContent = timeAgo(fetchTs);
+    };
+    update();
+    lastRefreshTickInterval = setInterval(update, 30 * 1000);
+}
+
+function stopRefreshTick() {
+    if (lastRefreshTickInterval) {
+        clearInterval(lastRefreshTickInterval);
+        lastRefreshTickInterval = null;
+    }
+}
+
 // ── Render: email list ────────────────────────────────────────────────────────
 
-function renderEmails(container, emails) {
+function renderEmails(container, emails, fetchTs) {
     const listHTML = emails.length
         ? emails.map(e => `
             <div class="gm-item ${e.unread ? "gm-unread" : ""}">
@@ -137,7 +172,8 @@ function renderEmails(container, emails) {
     container.innerHTML = `
         <div class="gm-header">
           <div class="gm-title"><span class="gm-title-icon">✉️</span> Gmail</div>
-          <div style="display:flex;gap:6px">
+          <div class="gm-header-right">
+            <span class="gm-last-refresh" id="gm-last-refresh"></span>
             <button class="gm-btn-icon" id="gm-refresh" title="Refresh">↻</button>
             <button class="gm-btn-icon" id="gm-settings" title="Settings">⚙</button>
           </div>
@@ -147,11 +183,17 @@ function renderEmails(container, emails) {
           <a class="gm-open-link" href="https://mail.google.com" target="_blank">Open Gmail ↗</a>
         </div>`;
 
+    startRefreshTick(container, fetchTs);
+
     $("#gm-refresh", container).addEventListener("click", async () => {
+        stopRefreshTick();
         await clearCache();
         initGmail(container);
     });
-    $("#gm-settings", container).addEventListener("click", () => showSettings(container));
+    $("#gm-settings", container).addEventListener("click", () => {
+        stopRefreshTick();
+        showSettings(container);
+    });
 }
 
 function renderError(container, msg) {
@@ -184,14 +226,37 @@ function showOnboarding(container) {
 
 // ── Render: settings panel ────────────────────────────────────────────────────
 
+const REFRESH_OPTIONS = [
+    { label: "1 minute",   ms: 1  * 60 * 1000 },
+    { label: "2 minutes",  ms: 2  * 60 * 1000 },
+    { label: "5 minutes",  ms: 5  * 60 * 1000 },
+    { label: "10 minutes", ms: 10 * 60 * 1000 },
+    { label: "15 minutes", ms: 15 * 60 * 1000 },
+    { label: "30 minutes", ms: 30 * 60 * 1000 },
+];
+
 async function showSettings(container) {
-    const css = await storageGet(CSS_KEY);
+    const [css, refreshMs] = await Promise.all([
+        storageGet(CSS_KEY),
+        storageGet(REFRESH_KEY),
+    ]);
+    const currentMs = refreshMs ?? DEFAULT_REFRESH_MS;
+
+    const refreshOptions = REFRESH_OPTIONS.map(o =>
+        `<option value="${o.ms}"${o.ms === currentMs ? " selected" : ""}>${o.label}</option>`
+    ).join("");
 
     container.innerHTML = `
         <div class="gm-header">
           <div class="gm-title"><span class="gm-title-icon">⚙️</span> Gmail Settings</div>
         </div>
         <div class="gm-settings">
+          <label class="gm-settings-label">Auto-refresh interval
+            <select class="gm-settings-input gm-settings-select" id="gm-s-refresh">
+              ${refreshOptions}
+            </select>
+          </label>
+
           <label class="gm-settings-label">Custom CSS
             <textarea class="gm-settings-input gm-settings-css" id="gm-s-css"
                       spellcheck="false"
@@ -212,7 +277,11 @@ async function showSettings(container) {
 
     $("#gm-s-save", container).addEventListener("click", async () => {
         const newCss = $("#gm-s-css", container).value;
-        await storageSet(CSS_KEY, newCss);
+        const newRefreshMs = parseInt($("#gm-s-refresh", container).value, 10);
+        await Promise.all([
+            storageSet(CSS_KEY, newCss),
+            storageSet(REFRESH_KEY, newRefreshMs),
+        ]);
         applyCustomCSS(newCss);
         await clearCache();
         initGmail(container);
@@ -234,16 +303,15 @@ async function showSettings(container) {
 // ── Auto-refresh timer ────────────────────────────────────────────────────────
 
 let autoRefreshInterval = null;
-const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 
-function startAutoRefresh(container) {
+function startAutoRefresh(container, refreshMs) {
     if (autoRefreshInterval) clearInterval(autoRefreshInterval);
     // Chrome's getAuthToken handles silent token renewal automatically,
     // so each periodic refresh just re-runs the normal init path.
     autoRefreshInterval = setInterval(async () => {
         await clearCache();
         initGmail(container, false);
-    }, AUTO_REFRESH_MS);
+    }, refreshMs);
 }
 
 // ── Main init ─────────────────────────────────────────────────────────────────
@@ -251,6 +319,8 @@ function startAutoRefresh(container) {
 export async function initGmail(container, interactive = false) {
     const css = await storageGet(CSS_KEY);
     if (css) applyCustomCSS(css);
+
+    const refreshMs = (await storageGet(REFRESH_KEY)) ?? DEFAULT_REFRESH_MS;
 
     container.innerHTML = `<div class="gm-loading">Loading emails…</div>`;
 
@@ -271,17 +341,17 @@ export async function initGmail(container, interactive = false) {
     // Cache hit — render immediately
     const cached = await getCached();
     if (cached) {
-        renderEmails(container, cached);
-        startAutoRefresh(container);
+        renderEmails(container, cached.emails, cached.ts);
+        startAutoRefresh(container, refreshMs);
         return;
     }
 
     // Fresh fetch
     try {
         const emails = await loadEmails(token);
-        await setCache(emails);
-        renderEmails(container, emails);
-        startAutoRefresh(container);
+        const ts = await setCache(emails);
+        renderEmails(container, emails, ts);
+        startAutoRefresh(container, refreshMs);
     } catch (e) {
         if (e.message === "auth_expired") {
             // API rejected the token — evict it from Chrome's cache and retry once
@@ -289,9 +359,9 @@ export async function initGmail(container, interactive = false) {
             try {
                 const fresh = await getToken(false);
                 const emails = await loadEmails(fresh);
-                await setCache(emails);
-                renderEmails(container, emails);
-                startAutoRefresh(container);
+                const ts = await setCache(emails);
+                renderEmails(container, emails, ts);
+                startAutoRefresh(container, refreshMs);
             } catch {
                 showOnboarding(container);
             }

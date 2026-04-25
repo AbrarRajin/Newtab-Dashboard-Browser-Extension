@@ -23,6 +23,19 @@
     /* was 14px */
 }
 
+.gm-header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gm-last-refresh {
+    font-size: 0.65rem;
+    opacity: 0.35;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
 .gm-title {
     font-size: 0.8rem;
     font-weight: 600;
@@ -269,6 +282,20 @@
 
 .gm-settings-input:focus {
     border-color: rgba(255, 255, 255, 0.42);
+}
+
+.gm-settings-select {
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+}
+
+.gm-settings-select option {
+    background: #1a1a2e;
+    color: #fff;
 }
 
 .gm-settings-css {
