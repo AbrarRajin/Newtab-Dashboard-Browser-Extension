@@ -20,7 +20,7 @@
     position: relative;
     background: rgba(61, 61, 61, 0.426);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.15);
     border-radius: 999px;
     padding: 5px 5px 5px 20px;
     transition: border-color 0.2s, background 0.2s;
@@ -166,7 +166,9 @@
     flex-shrink: 0;
 }
 
-.hidden { display: none !important; }
+.hidden {
+    display: none !important;
+}
 
 /* ── Quick action pills row ── */
 .sb-pills {
@@ -215,7 +217,7 @@
     user-select: none;
 }
 
-.sb-radio input[type="radio"]:checked + .sb-radio-name {
+.sb-radio input[type="radio"]:checked+.sb-radio-name {
     background: rgba(255, 255, 255, 0.92);
     color: #374151;
     font-weight: 600;
@@ -226,7 +228,7 @@
     color: rgba(255, 255, 255, 0.95);
 }
 
-.sb-radio input[type="radio"]:checked + .sb-radio-name:hover {
+.sb-radio input[type="radio"]:checked+.sb-radio-name:hover {
     color: #374151;
 }
 
