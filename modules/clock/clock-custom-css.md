@@ -127,3 +127,28 @@ body {
   letter-spacing: 0.25em;
 }
 ```
+## Example - MOON CLOCK
+```
+@import url('https://fonts.googleapis.com/css2?family=Asimovian&display=swap');
+
+#clock-time {
+  font-family: 'Asimovian', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.55),
+    0 0 18px rgba(255, 255, 255, 0.25),
+    0 0 40px rgba(255, 255, 255, 0.10);
+}
+
+#clock-date {
+  font-family: 'Asimovian', sans-serif;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.3em;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.2);
+  opacity: 1;
+}
+```
