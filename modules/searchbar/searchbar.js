@@ -113,10 +113,9 @@ export async function initSearchbar(container) {
                autocomplete="off" spellcheck="false">
         <span class="sb-mode-badge" id="sb-mode-badge"></span>
         <button class="sb-go-btn" id="sb-go-btn">Google</button>
+        <!-- Suggestions anchored to input-row for precise positioning -->
+        <div class="sb-suggestions" id="sb-suggestions"></div>
       </div>
-
-      <!-- Suggestions anchored to wrapper, not input-row -->
-      <div class="sb-suggestions" id="sb-suggestions"></div>
 
       <!-- Pills row: mode group + optional filetype + settings gear -->
       <div class="sb-pills-row">

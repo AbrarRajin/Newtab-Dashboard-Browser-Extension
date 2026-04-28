@@ -6,10 +6,10 @@
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 16px;
-    padding: 20px 24px;
+    padding: 12px 16px;
     color: #fff;
     font-family: inherit;
-    width: 450px;
+    width: 400px;
     box-sizing: border-box;
 }
 
@@ -31,7 +31,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0px;
+    margin-bottom: 20px;
 }
 
 .w-location {
@@ -60,21 +60,29 @@
 /* ── Current weather ── */
 .w-current {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    text-align: center;
-    margin-bottom: 5px;
+    justify-content: center;
+    gap: 16px;
+    margin: 6px 0 10px;
 }
 
 .w-icon-lg {
     width: 80px;
     height: 80px;
-    margin: -8px 0 -4px;
+    flex-shrink: 0;
 
     filter:
         drop-shadow(1px 0 0 rgba(255, 255, 255, 0.7)) drop-shadow(-1px 0 0 rgba(255, 255, 255, 0.7)) drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7)) drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.7)) drop-shadow(1px 1px 0 rgba(255, 255, 255, 0.7)) drop-shadow(-1px 1px 0 rgba(255, 255, 255, 0.7)) drop-shadow(1px -1px 0 rgba(255, 255, 255, 0.7)) drop-shadow(-1px -1px 0 rgba(255, 255, 255, 0.7));
 }
 
+.w-current-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    padding-left: 16px;
+}
 
 .w-temp-main {
     font-size: 2rem;
@@ -97,7 +105,23 @@
     font-size: 0.9rem;
     opacity: 0.75;
     text-transform: capitalize;
-    margin: 4px 0 10px;
+}
+
+.w-high-low {
+    display: flex;
+    gap: 8px;
+    font-size: 0.82rem;
+    margin-top: 2px;
+    margin-bottom: 10px;
+}
+
+.w-hl-high {
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.w-hl-low {
+    opacity: 0.5;
 }
 
 .w-meta {
@@ -106,6 +130,8 @@
     font-size: 0.8rem;
     opacity: 0.7;
     align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
 }
 
 .w-meta-row {
@@ -134,7 +160,7 @@
     display: flex;
     justify-content: space-between;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
-    padding-top: 14px;
+    padding-top: 25px;
     gap: 4px;
 }
 
@@ -174,6 +200,14 @@
 .w-day-low {
     font-size: 0.72rem;
     opacity: 0.55;
+}
+
+.w-day-pop {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #5bb8f5;
+    opacity: 0.85;
+    margin-top: 2px;
 }
 
 /* ── Onboarding ── */

@@ -84,6 +84,9 @@ function renderWeather(container, current, forecastList, unit) {
     const { temp, feels_like, humidity, wind_speed } = { ...current.main, wind_speed: current.wind.speed };
     const todayPop = forecastList[0]?.pop ?? 0;
 
+    const todayHigh = forecastList[0]?.max ?? Math.round(temp);
+    const todayLow  = forecastList[0]?.min ?? Math.round(temp);
+
     container.innerHTML = `
     <div class="w-header">
       <div class="w-location">${current.name}, ${current.sys.country}</div>
@@ -92,17 +95,24 @@ function renderWeather(container, current, forecastList, unit) {
 
     <div class="w-current">
       <img class="w-icon-lg" src="${owmIconUrl(current.weather[0].icon)}" alt="${current.weather[0].description}">
-      <div class="w-temp-main">${Math.round(temp)}${sym}<span class="w-feels-like">feels like ${Math.round(feels_like)}${sym}</span></div>
-      <div class="w-condition">${current.weather[0].description}</div>
-      <div class="w-meta">
-        <div class="w-meta-row">
-          <span>🌧</span>
-          <div class="w-precip-bar"><div class="w-precip-fill" style="width:${todayPop}%"></div></div>
-          <span>${todayPop}%</span>
+      <div class="w-current-info">
+        <div class="w-temp-main">${Math.round(temp)}${sym}<span class="w-feels-like">feels like ${Math.round(feels_like)}${sym}</span></div>
+        <div class="w-condition">${current.weather[0].description}</div>
+        <div class="w-high-low">
+          <span class="w-hl-high">↑ ${todayHigh}${sym}</span>
+          <span class="w-hl-low">↓ ${todayLow}${sym}</span>
         </div>
-        <span>💧 ${humidity}%</span>
-        <span>💨 ${Math.round(wind_speed)} ${unit === "imperial" ? "mph" : "m/s"}</span>
       </div>
+    </div>
+
+    <div class="w-meta">
+      <div class="w-meta-row">
+        <span>🌧</span>
+        <div class="w-precip-bar"><div class="w-precip-fill" style="width:${todayPop}%"></div></div>
+        <span>${todayPop}%</span>
+      </div>
+      <span>💧 ${humidity}%</span>
+      <span>💨 ${Math.round(wind_speed)} ${unit === "imperial" ? "mph" : "m/s"}</span>
     </div>
 
     <div class="w-forecast">
@@ -114,6 +124,7 @@ function renderWeather(container, current, forecastList, unit) {
             <span class="w-day-high">${d.max}${sym}</span>
             <span class="w-day-low">${d.min}${sym}</span>
           </div>
+          <div class="w-day-pop">🌧 ${d.pop}%</div>
         </div>`).join("")}
     </div>
   `;

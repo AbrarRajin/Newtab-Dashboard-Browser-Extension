@@ -15,23 +15,53 @@ The weather module includes a built-in CSS editor that lets you restyle the widg
 
 ---
 
+## Widget Layout
+
+```
+┌─────────────────────────────────────┐
+│ CITY, COUNTRY                     ⚙ │  ← .w-header / .w-location / .w-btn-icon
+│                                     │
+│   [icon] │ 23°C  feels like 21°C    │  ← .w-current / .w-icon-lg / .w-current-info
+│          │ partly cloudy            │  ← .w-condition
+│          │ ↑ 25°C  ↓ 18°C          │  ← .w-high-low / .w-hl-high / .w-hl-low
+│                                     │
+│   🌧 ▓▓▓░░  40%  💧 65%  💨 5 m/s  │  ← .w-meta
+│ ─────────────────────────────────── │
+│  MON   TUE   WED   THU   FRI        │  ← .w-forecast
+│  [ic]  [ic]  [ic]  [ic]  [ic]       │  ← .w-icon-sm
+│  25°   22°   19°   21°   24°        │  ← .w-day-high
+│  18°   15°   13°   14°   17°        │  ← .w-day-low
+└─────────────────────────────────────┘
+```
+
+---
+
 ## Targetable Elements
 
 | Selector | What it controls |
 |---|---|
 | `.weather-module` | The outer card (background, border, shadow, size) |
+| `.w-header` | Row containing the location and gear button |
 | `.w-location` | City and country name at the top |
-| `.w-temp-main` | The large current temperature number |
-| `.w-condition` | The weather description text (e.g. "light rain") |
-| `.w-meta` | Humidity and wind speed row |
+| `.w-btn-icon` | The ⚙ gear button |
+| `.w-current` | Row holding the icon and the info block side by side |
 | `.w-icon-lg` | The large current weather icon |
+| `.w-current-info` | Column block to the right of the icon (has the vertical divider) |
+| `.w-temp-main` | The large current temperature number |
+| `.w-feels-like` | The "feels like" text next to the temperature |
+| `.w-condition` | The weather description text (e.g. "light rain") |
+| `.w-high-low` | Row containing today's high and low |
+| `.w-hl-high` | Today's high temperature (↑) |
+| `.w-hl-low` | Today's low temperature (↓) |
+| `.w-meta` | Precipitation, humidity, and wind row |
+| `.w-precip-bar` | The precipitation progress bar track |
+| `.w-precip-fill` | The filled portion of the precipitation bar |
 | `.w-forecast` | The 5-day forecast row container |
 | `.w-day` | Individual day column in the forecast |
 | `.w-day-name` | Day label (e.g. "MON") |
 | `.w-day-high` | High temperature in the forecast |
 | `.w-day-low` | Low temperature in the forecast |
 | `.w-icon-sm` | Small forecast icons |
-| `.w-btn-icon` | The ⚙ gear button |
 
 ---
 
@@ -51,8 +81,18 @@ The weather module includes a built-in CSS editor that lets you restyle the widg
 .w-temp-main  { color: #ff6b6b; }
 .w-location   { color: #ffd93d; }
 .w-condition  { color: #a0c4ff; }
+.w-hl-high    { color: #ff6b6b; }
+.w-hl-low     { color: #aaa; }
 .w-day-high   { color: #ff6b6b; }
 .w-day-low    { color: #888; }
+```
+
+### Vertical Divider (between icon and info)
+```css
+.w-current-info {
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  padding-left: 20px;
+}
 ```
 
 ### Font Family
@@ -133,6 +173,12 @@ Ready-made themes are available in the `themes/` folder. To use one, open the fi
     0 0 40px rgba(128, 0, 255, 0.1);
 }
 
+.w-location {
+  font-family: 'Orbitron', sans-serif;
+  color: #c060ff;
+  text-shadow: 0 0 6px #9900cc, 0 0 18px #6600aa;
+}
+
 .w-temp-main {
   font-family: 'Orbitron', sans-serif;
   color: #df80ff;
@@ -143,10 +189,49 @@ Ready-made themes are available in the `themes/` folder. To use one, open the fi
     0 0 100px #5c00b8;
 }
 
-.w-location {
+.w-feels-like {
+  color: #b060e0;
+}
+
+.w-condition {
+  color: #c080ff;
+  opacity: 1;
+}
+
+.w-hl-high {
+  color: #df80ff;
+}
+
+.w-hl-low {
+  color: #8040aa;
+  opacity: 1;
+}
+
+.w-current-info {
+  border-left-color: rgba(191, 0, 255, 0.3);
+}
+
+.w-precip-fill {
+  background: #bf00ff;
+}
+
+.w-forecast {
+  border-top-color: rgba(191, 0, 255, 0.2);
+}
+
+.w-day-name {
   font-family: 'Orbitron', sans-serif;
-  color: #c060ff;
-  text-shadow: 0 0 6px #9900cc, 0 0 18px #6600aa;
+  color: #9940cc;
+  opacity: 1;
+}
+
+.w-day-high {
+  color: #df80ff;
+}
+
+.w-day-low {
+  color: #7030aa;
+  opacity: 1;
 }
 ```
 
