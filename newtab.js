@@ -6,7 +6,6 @@ import { initSearchbar } from "./modules/searchbar/searchbar.js";
 import { initQuicklinks } from "./modules/quicklinks/quicklinks.js";
 import { initLayout } from "./modules/layout/layout.js";
 import { initPomodoro } from "./modules/pomodoro/pomodoro.js";
-import { initCalendar } from "./modules/calendar/calendar.js";
 import "./modules/clock/clock.js"; // ← was missing
 
 // Restore saved order before modules render (no visual flash)
@@ -19,4 +18,3 @@ initGmail(document.getElementById("module-gmail"));
 initSearchbar(document.getElementById("module-searchbar"));
 initQuicklinks(document.getElementById("module-quicklinks"));
 initPomodoro(document.getElementById("module-pomodoro"));
-initCalendar(document.getElementById("module-calendar"));
