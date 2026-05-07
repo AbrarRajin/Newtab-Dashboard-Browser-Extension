@@ -581,7 +581,7 @@ function _qlGlobalDragInit() {
       const r = s.el.getBoundingClientRect();
       s.ph = document.createElement('div');
       s.ph.className = 'ql-drag-ph';
-      s.ph.style.width  = s.el.offsetWidth  + 'px';
+      s.ph.style.width = s.el.offsetWidth + 'px';
       s.ph.style.height = s.el.offsetHeight + 'px';
       s.el.after(s.ph);
 
@@ -598,7 +598,7 @@ function _qlGlobalDragInit() {
     }
 
     s.clone.style.left = (e.clientX - s.ox) + 'px';
-    s.clone.style.top  = (e.clientY - s.oy) + 'px';
+    s.clone.style.top = (e.clientY - s.oy) + 'px';
     _qlMovePh(s.row, s.ph, s.el, e.clientX, e.clientY);
   });
 
@@ -612,7 +612,7 @@ function _qlGlobalDragInit() {
     s.el.addEventListener('click', e => e.preventDefault(), { once: true });
 
     const addPh = s.row.querySelector('.ql-add-ph');
-    const slots  = [...s.row.children].filter(el => el !== addPh);
+    const slots = [...s.row.children].filter(el => el !== addPh);
     const newIdx = slots.indexOf(s.ph);
 
     s.ph.remove();
@@ -632,8 +632,8 @@ function _qlGlobalDragInit() {
 
 function _qlMovePh(row, ph, dragEl, mx, my) {
   const addPh = row.querySelector('.ql-add-ph');
-  const items  = [...row.children].filter(el => el !== ph && el !== dragEl && el !== addPh);
-  let target   = addPh;
+  const items = [...row.children].filter(el => el !== ph && el !== dragEl && el !== addPh);
+  let target = addPh;
   for (const item of items) {
     const r = item.getBoundingClientRect();
     if (my < r.top + r.height / 2) { target = item; break; }

@@ -11,6 +11,7 @@ const MODULE_LABELS = {
     'gm-gmail':    'Gmail',
     'gm-football': 'Football',
     'gm-pomodoro': 'Pomodoro',
+    'gm-calendar': 'Calendar',
 };
 
 const MODULES_ICON = `<svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor">

@@ -124,6 +124,7 @@ function renderWeather(container, current, forecastList, unit) {
             <span class="w-day-high">${d.max}${sym}</span>
             <span class="w-day-low">${d.min}${sym}</span>
           </div>
+          <div class="w-day-pop">🌧 ${d.pop}%</div>
         </div>`).join("")}
     </div>
   `;

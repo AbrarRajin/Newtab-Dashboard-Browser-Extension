@@ -146,9 +146,12 @@ function groupEventsByDay(events) {
         map.get(key).push(ev);
     }
 
+    const todayNoon = new Date(`${todayStr}T12:00`).getTime();
+
     return Array.from(map, ([isoDate, dayEvents]) => {
+        const daysAway = Math.round((new Date(`${isoDate}T12:00`).getTime() - todayNoon) / 86_400_000);
         let label;
-        if (isoDate === todayStr)    label = "Today";
+        if (isoDate === todayStr)         label = "Today";
         else if (isoDate === tomorrowStr) label = "Tomorrow";
         else {
             // Anchor to noon to prevent DST edge cases flipping the date.
@@ -156,7 +159,7 @@ function groupEventsByDay(events) {
                 weekday: "long", month: "short", day: "numeric",
             });
         }
-        return { label, isoDate, events: dayEvents };
+        return { label, isoDate, daysAway, events: dayEvents };
     });
 }
 
@@ -194,9 +197,12 @@ function stopRefreshTick() {
 
 function renderEvents(container, groupedDays, fetchTs) {
     const listHTML = groupedDays.length
-        ? groupedDays.map(({ label, events }) => `
+        ? groupedDays.map(({ label, daysAway, events }) => `
             <div class="cal-day-group">
-              <div class="cal-day-label">${label}</div>
+              <div class="cal-day-label">
+                <span>${label}</span>
+                ${daysAway >= 2 ? `<span class="cal-days-away">IN ${daysAway} DAYS</span>` : ''}
+              </div>
               ${events.map(ev => `
                 <div class="cal-item">
                   <span class="cal-color-dot" style="background:${getEventColor(ev)}"></span>
