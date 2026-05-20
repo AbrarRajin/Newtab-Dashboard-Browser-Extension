@@ -7,17 +7,6 @@
 const FB_BASE = "https://api.football-data.org/v4";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const LIVE_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 hours
-const DEFAULT_REFRESH_MS = 60 * 60 * 1000; // 1 hour default
-
-const REFRESH_OPTIONS = [
-    { label: '15 minutes', ms: 15 * 60 * 1000 },
-    { label: '30 minutes', ms: 30 * 60 * 1000 },
-    { label: '1 hour',     ms: 60 * 60 * 1000 },
-    { label: '3 hours',    ms: 3 * 60 * 60 * 1000 },
-    { label: '6 hours',    ms: 6 * 60 * 60 * 1000 },
-    { label: '12 hours',   ms: 12 * 60 * 60 * 1000 },
-    { label: '24 hours',   ms: 24 * 60 * 60 * 1000 },
-];
 
 function $(sel, ctx = document) { return ctx.querySelector(sel); }
 
@@ -137,23 +126,14 @@ async function setCachedLastMatch(match) {
 // ── Ticker ────────────────────────────────────────────────────────────────────
 
 let _ticker = null;
-let _autoRefresh = null;
 
 function clearTicker() {
     if (_ticker) { clearInterval(_ticker); _ticker = null; }
 }
 
-function startAutoRefresh(container, refreshMs) {
-    if (_autoRefresh) clearInterval(_autoRefresh);
-    _autoRefresh = setInterval(async () => {
-        await storageSet({ fb_cache: null, fb_last_cache: null });
-        initFootball(container);
-    }, refreshMs);
-}
-
 // ── Render ────────────────────────────────────────────────────────────────────
 
-function renderMatch(container, match, gmtOffset, lastMatch = null, trackedTeamId = null) {
+function renderMatch(container, match, gmtOffset) {
     clearTicker();
     const status = matchStatus(match.utcDate);
     const t = applyGMT(match.utcDate, gmtOffset);
@@ -221,7 +201,7 @@ function renderMatch(container, match, gmtOffset, lastMatch = null, trackedTeamI
             if (el && cd) el.textContent = `📅 ${cd}`;
             if (matchStatus(match.utcDate) !== 'upcoming') {
                 clearTicker();
-                renderMatch(container, match, gmtOffset, lastMatch, trackedTeamId);
+                renderMatch(container, match, gmtOffset);
             }
         };
         update();
@@ -229,8 +209,6 @@ function renderMatch(container, match, gmtOffset, lastMatch = null, trackedTeamI
     }
 
     $('#fb-settings-btn', container).addEventListener('click', () => showSettings(container));
-
-    if (lastMatch && trackedTeamId) renderLastResult(container, lastMatch, gmtOffset, trackedTeamId);
 }
 
 function renderLastResult(container, match, gmtOffset, trackedTeamId) {
@@ -255,7 +233,7 @@ function renderLastResult(container, match, gmtOffset, trackedTeamId) {
 
     const html = `
         <div class="fb-result-section">
-            <span class="fb-result-label">Last Result${match.competition?.name ? ` ( ${match.competition.name} )` : ''}</span>
+            <span class="fb-result-label">Last Result</span>
             <div class="fb-result-matchup">
                 <div class="fb-result-team">
                     ${home.crest ? `<img class="fb-result-crest" src="${home.crest}" alt="">` : ''}
@@ -318,13 +296,9 @@ function showOnboarding(container) {
 
 function showSettings(container, errorMsg = '') {
     clearTicker();
-    storageGet(['fb_key', 'fb_pid', 'fb_gmt', 'fb_css', 'fb_refresh_ms']).then(({ fb_key = '', fb_pid = '', fb_gmt = 0, fb_css = '', fb_refresh_ms }) => {
-        const currentRefreshMs = fb_refresh_ms ?? DEFAULT_REFRESH_MS;
+    storageGet(['fb_key', 'fb_pid', 'fb_gmt', 'fb_css']).then(({ fb_key = '', fb_pid = '', fb_gmt = 0, fb_css = '' }) => {
         const gmtOpts = Array.from({ length: 27 }, (_, i) => i - 12)
             .map(n => `<option value="${n}" ${fb_gmt == n ? 'selected' : ''}>GMT${n >= 0 ? '+' : ''}${n}</option>`)
-            .join('');
-        const refreshOpts = REFRESH_OPTIONS
-            .map(o => `<option value="${o.ms}"${o.ms === currentRefreshMs ? ' selected' : ''}>${o.label}</option>`)
             .join('');
 
         container.innerHTML = `
@@ -345,10 +319,6 @@ function showSettings(container, errorMsg = '') {
 
                     <label class="fb-label">Timezone (GMT Offset)
                         <select class="fb-input" id="fb-s-gmt">${gmtOpts}</select>
-                    </label>
-
-                    <label class="fb-label">Auto-refresh interval
-                        <select class="fb-input" id="fb-s-refresh">${refreshOpts}</select>
                     </label>
 
                     <label class="fb-label">Custom CSS
@@ -373,8 +343,7 @@ function showSettings(container, errorMsg = '') {
             const pid = $('#fb-s-pid', container).value.trim();
             const gmt = parseFloat($('#fb-s-gmt', container).value);
             const css = $('#fb-s-css', container).value;
-            const refreshMs = parseInt($('#fb-s-refresh', container).value, 10);
-            await storageSet({ fb_key: key, fb_pid: pid, fb_gmt: gmt, fb_css: css, fb_refresh_ms: refreshMs, fb_cache: null, fb_last_cache: null });
+            await storageSet({ fb_key: key, fb_pid: pid, fb_gmt: gmt, fb_css: css, fb_cache: null, fb_last_cache: null });
             applyCustomCSS(css);
             initFootball(container);
         });
@@ -389,9 +358,8 @@ export async function initFootball(container) {
     clearTicker();
     container.innerHTML = `<div class="fb-card"><p class="fb-loading">Loading match…</p></div>`;
 
-    const { fb_key: key, fb_pid: pid, fb_gmt: gmtOffset = 0, fb_css: css = '', fb_refresh_ms } =
-        await storageGet(['fb_key', 'fb_pid', 'fb_gmt', 'fb_css', 'fb_refresh_ms']);
-    const refreshMs = fb_refresh_ms ?? DEFAULT_REFRESH_MS;
+    const { fb_key: key, fb_pid: pid, fb_gmt: gmtOffset = 0, fb_css: css = '' } =
+        await storageGet(['fb_key', 'fb_pid', 'fb_gmt', 'fb_css']);
 
     applyCustomCSS(css);
 
@@ -404,8 +372,8 @@ export async function initFootball(container) {
     const cached = await getCachedMatch();
     const cachedLast = await getCachedLastMatch();
     if (cached) {
-        renderMatch(container, cached, gmtOffset, cachedLast, pid);
-        startAutoRefresh(container, refreshMs);
+        renderMatch(container, cached, gmtOffset);
+        if (cachedLast) renderLastResult(container, cachedLast, gmtOffset, pid);
         return;
     }
 
@@ -416,9 +384,11 @@ export async function initFootball(container) {
             fetchLastMatch(pid, key),
         ]);
         await setCachedMatch(match);
-        if (lastMatch) await setCachedLastMatch(lastMatch);
-        renderMatch(container, match, gmtOffset, lastMatch, pid);
-        startAutoRefresh(container, refreshMs);
+        renderMatch(container, match, gmtOffset);
+        if (lastMatch) {
+            await setCachedLastMatch(lastMatch);
+            renderLastResult(container, lastMatch, gmtOffset, pid);
+        }
     } catch (e) {
         const msgs = {
             invalid_key: '❌ API key rejected. Check your key — new keys take up to 2 hours to activate.',
