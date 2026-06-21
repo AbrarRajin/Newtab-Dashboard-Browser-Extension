@@ -116,6 +116,10 @@
 }
 
 .cal-day-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.09em;
@@ -124,6 +128,18 @@
     margin-bottom: 3px;
     padding-bottom: 3px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cal-days-away {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    color: #7eb8ff;
+    opacity: 1;
+    background: rgba(100, 160, 255, 0.12);
+    border: 1px solid rgba(100, 160, 255, 0.25);
+    border-radius: 999px;
+    padding: 1px 7px;
 }
 
 /* ── Individual event item ── */
