@@ -4,24 +4,24 @@
 // declared in manifest.json under the "oauth2" key.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GCAL_API          = "https://www.googleapis.com/calendar/v3";
-const CACHE_KEY         = "cal_cache";
-const CSS_KEY           = "cal_css";
-const REFRESH_KEY       = "cal_refresh_ms";
-const CACHE_TTL         = 15 * 60 * 1000;       // 15 minutes
+const GCAL_API = "https://www.googleapis.com/calendar/v3";
+const CACHE_KEY = "cal_cache";
+const CSS_KEY = "cal_css";
+const REFRESH_KEY = "cal_refresh_ms";
+const CACHE_TTL = 15 * 60 * 1000;       // 15 minutes
 const DEFAULT_REFRESH_MS = 15 * 60 * 1000;       // 15 minutes
 
 // Google Calendar colour palette (colorId → hex)
 const GCAL_COLORS = {
-    "1":  "#7986cb", // Lavender
-    "2":  "#33b679", // Sage
-    "3":  "#8e24aa", // Grape
-    "4":  "#e67c73", // Flamingo
-    "5":  "#f6c026", // Banana
-    "6":  "#f5511d", // Tangerine
-    "7":  "#039be5", // Peacock
-    "8":  "#616161", // Graphite
-    "9":  "#3f51b5", // Blueberry
+    "1": "#7986cb", // Lavender
+    "2": "#33b679", // Sage
+    "3": "#8e24aa", // Grape
+    "4": "#e67c73", // Flamingo
+    "5": "#f6c026", // Banana
+    "6": "#f5511d", // Tangerine
+    "7": "#039be5", // Peacock
+    "8": "#616161", // Graphite
+    "9": "#3f51b5", // Blueberry
     "10": "#0b8043", // Basil
     "11": "#d60000", // Tomato
 };
@@ -95,7 +95,7 @@ async function calGet(path, token) {
     if (r.status === 401) throw new Error("auth_expired");
     if (!r.ok) {
         const body = await r.json().catch(() => ({}));
-        const msg  = body?.error?.message ?? `HTTP ${r.status}`;
+        const msg = body?.error?.message ?? `HTTP ${r.status}`;
         throw new Error(`api_error: ${msg}`);
     }
     return r.json();
@@ -103,10 +103,10 @@ async function calGet(path, token) {
 
 async function loadEvents(token) {
     const timeMin = new Date().toISOString();
-    const timeMax = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    const params  = new URLSearchParams({
-        maxResults:   50,
-        orderBy:      "startTime",
+    const timeMax = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const params = new URLSearchParams({
+        maxResults: 50,
+        orderBy: "startTime",
         singleEvents: true,
         timeMin,
         timeMax,
@@ -131,7 +131,7 @@ function getEventColor(event) {
 // Uses "en-CA" locale to get reliable YYYY-MM-DD date strings independent of
 // the user's locale, avoiding UTC-vs-local timezone shifts for all-day events.
 function groupEventsByDay(events) {
-    const todayStr    = new Date().toLocaleDateString("en-CA");
+    const todayStr = new Date().toLocaleDateString("en-CA");
     const tomorrowStr = new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString("en-CA");
 
     const map = new Map();
@@ -151,7 +151,7 @@ function groupEventsByDay(events) {
     return Array.from(map, ([isoDate, dayEvents]) => {
         const daysAway = Math.round((new Date(`${isoDate}T12:00`).getTime() - todayNoon) / 86_400_000);
         let label;
-        if (isoDate === todayStr)         label = "Today";
+        if (isoDate === todayStr) label = "Today";
         else if (isoDate === tomorrowStr) label = "Tomorrow";
         else {
             // Anchor to noon to prevent DST edge cases flipping the date.
@@ -212,7 +212,7 @@ function renderEvents(container, groupedDays, fetchTs) {
                   </div>
                 </div>`).join("")}
             </div>`).join("")
-        : `<div class="cal-empty">📭 No events in the next 7 days</div>`;
+        : `<div class="cal-empty">📭 No events in the next 30 days</div>`;
 
     container.innerHTML = `
         <div class="cal-header">
@@ -272,7 +272,7 @@ function showOnboarding(container) {
 // ── Render: settings panel ────────────────────────────────────────────────────
 
 const REFRESH_OPTIONS = [
-    { label: "5 minutes",  ms:  5 * 60 * 1000 },
+    { label: "5 minutes", ms: 5 * 60 * 1000 },
     { label: "10 minutes", ms: 10 * 60 * 1000 },
     { label: "15 minutes", ms: 15 * 60 * 1000 },
     { label: "30 minutes", ms: 30 * 60 * 1000 },
@@ -320,7 +320,7 @@ async function showSettings(container) {
         </div>`;
 
     $("#cal-s-save", container).addEventListener("click", async () => {
-        const newCss       = $("#cal-s-css", container).value;
+        const newCss = $("#cal-s-css", container).value;
         const newRefreshMs = parseInt($("#cal-s-refresh", container).value, 10);
         await Promise.all([
             storageSet(CSS_KEY, newCss),
@@ -388,16 +388,16 @@ export async function initCalendar(container, interactive = false) {
     // Fresh fetch
     try {
         const events = await loadEvents(token);
-        const ts     = await setCache(events);
+        const ts = await setCache(events);
         renderEvents(container, groupEventsByDay(events), ts);
         startAutoRefresh(container, refreshMs);
     } catch (e) {
         if (e.message === "auth_expired") {
             await removeCachedToken(token);
             try {
-                const fresh  = await getToken(false);
+                const fresh = await getToken(false);
                 const events = await loadEvents(fresh);
-                const ts     = await setCache(events);
+                const ts = await setCache(events);
                 renderEvents(container, groupEventsByDay(events), ts);
                 startAutoRefresh(container, refreshMs);
             } catch {

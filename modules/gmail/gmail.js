@@ -12,6 +12,9 @@ const CACHE_TTL = 3 * 60 * 1000;      // 3 minutes
 const DEFAULT_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 
 function $(sel, ctx = document) { return ctx.querySelector(sel); }
+function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 // ── Custom CSS ────────────────────────────────────────────────────────────────
 
@@ -134,6 +137,102 @@ async function loadEmails(token) {
     });
 }
 
+// ── Full email fetch ──────────────────────────────────────────────────────────
+
+async function fetchFullEmail(id, token) {
+    return gmailGet(`/messages/${id}?format=full`, token);
+}
+
+// Walk the MIME payload tree to find the best readable body part.
+// Prefers text/html; falls back to text/plain.
+function extractBody(payload) {
+    if (payload.mimeType === "text/html" && payload.body?.data)
+        return { type: "html", data: atob(payload.body.data.replace(/-/g, "+").replace(/_/g, "/")) };
+    if (payload.mimeType === "text/plain" && payload.body?.data)
+        return { type: "plain", data: atob(payload.body.data.replace(/-/g, "+").replace(/_/g, "/")) };
+    if (payload.parts) {
+        for (const p of payload.parts) { const r = extractBody(p); if (r?.type === "html")   return r; }
+        for (const p of payload.parts) { const r = extractBody(p); if (r)                     return r; }
+    }
+    return null;
+}
+
+// ── Email reader modal ────────────────────────────────────────────────────────
+
+async function showEmailModal(emailMeta, token) {
+    const overlay = document.createElement("div");
+    overlay.className = "gm-modal-overlay";
+    overlay.innerHTML = `
+        <div class="gm-modal">
+          <div class="gm-modal-header">
+            <div class="gm-modal-meta">
+              <div class="gm-modal-subject">${escapeHtml(emailMeta.subject)}</div>
+              <div class="gm-modal-from">From: ${escapeHtml(emailMeta.sender)} · ${emailMeta.date}</div>
+            </div>
+            <button class="gm-modal-close" title="Close">✕</button>
+          </div>
+          <div class="gm-modal-body">
+            <div class="gm-modal-loading">Loading…</div>
+          </div>
+        </div>`;
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+        overlay.remove();
+        document.removeEventListener("keydown", onKey);
+    };
+    const onKey = e => { if (e.key === "Escape") closeModal(); };
+    overlay.querySelector(".gm-modal-close").addEventListener("click", closeModal);
+    overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(); });
+    document.addEventListener("keydown", onKey);
+
+    try {
+        const msg    = await fetchFullEmail(emailMeta.id, token);
+        const body   = extractBody(msg.payload);
+        const bodyEl = overlay.querySelector(".gm-modal-body");
+
+        if (!body) {
+            bodyEl.innerHTML = `<div class="gm-modal-empty">No readable content.</div>`;
+            return;
+        }
+        if (body.type === "html") {
+            const iframe = document.createElement("iframe");
+            iframe.className = "gm-modal-iframe";
+            iframe.setAttribute("sandbox", "allow-same-origin");
+            bodyEl.innerHTML = "";
+            bodyEl.appendChild(iframe);
+            iframe.srcdoc = body.data; // set via JS — no attribute-escaping needed
+        } else {
+            bodyEl.innerHTML = `<pre class="gm-modal-plain">${escapeHtml(body.data)}</pre>`;
+        }
+    } catch {
+        overlay.querySelector(".gm-modal-body").innerHTML =
+            `<div class="gm-modal-empty">Could not load email.</div>`;
+    }
+}
+
+// ── Long-press detection ──────────────────────────────────────────────────────
+
+function attachLongPress(container, emails) {
+    const byId = new Map(emails.map(e => [e.id, e]));
+    container.querySelectorAll(".gm-item[data-id]").forEach(item => {
+        let timer = null;
+        const cancel = () => { clearTimeout(timer); item.classList.remove("gm-pressing"); };
+
+        item.addEventListener("mousedown", () => {
+            item.classList.add("gm-pressing");
+            timer = setTimeout(async () => {
+                item.classList.remove("gm-pressing");
+                const meta  = byId.get(item.dataset.id);
+                const token = await getToken(false).catch(() => null);
+                if (meta && token) showEmailModal(meta, token);
+            }, 3000);
+        });
+        item.addEventListener("mouseup",    cancel);
+        item.addEventListener("mouseleave", cancel);
+    });
+}
+
 // ── Last-refreshed ticker ─────────────────────────────────────────────────────
 
 let lastRefreshTickInterval = null;
@@ -160,7 +259,7 @@ function stopRefreshTick() {
 function renderEmails(container, emails, fetchTs) {
     const listHTML = emails.length
         ? emails.map(e => `
-            <div class="gm-item ${e.unread ? "gm-unread" : ""}">
+            <div class="gm-item ${e.unread ? "gm-unread" : ""}" data-id="${e.id}">
               <div class="gm-sender">
                 ${e.unread ? '<span class="gm-unread-dot"></span>' : ""}${e.sender}
               </div>
@@ -184,6 +283,7 @@ function renderEmails(container, emails, fetchTs) {
         </div>`;
 
     startRefreshTick(container, fetchTs);
+    attachLongPress(container, emails);
 
     $("#gm-refresh", container).addEventListener("click", async () => {
         stopRefreshTick();
