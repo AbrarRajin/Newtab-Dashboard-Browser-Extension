@@ -70,6 +70,11 @@
         drop-shadow(2px 0 0 white) drop-shadow(-2px 0 0 white) drop-shadow(0 2px 0 white) drop-shadow(0 -2px 0 white)
 }
 
+.fb-comp-logo-sm {
+    width: 60px;
+    height: 60px;
+}
+
 
 .fb-icon-btn {
     position: absolute;
@@ -147,6 +152,16 @@
     letter-spacing: 0.12em;
     transform: translateX(-0.06em);
     /* half of 0.12em */
+}
+
+.fb-live-score {
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-align: center;
+    color: #4cd98a;
+    text-shadow: 0 0 18px rgba(72, 199, 116, 0.45);
+    font-variant-numeric: tabular-nums;
 }
 
 .fb-date-line {

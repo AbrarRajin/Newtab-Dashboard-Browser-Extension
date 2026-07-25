@@ -8,6 +8,7 @@ const FB_BASE = "https://api.football-data.org/v4";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const LIVE_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 hours
 const DEFAULT_REFRESH_MS = 60 * 60 * 1000; // 1 hour default
+const LIVE_REFRESH_MS = 2 * 60 * 1000;    // 2 minutes during live matches
 
 const REFRESH_OPTIONS = [
     { label: '15 minutes', ms: 15 * 60 * 1000 },
@@ -108,6 +109,24 @@ async function fetchLastMatch(teamId, apiKey) {
     return matches[0] || null;
 }
 
+async function fetchLiveScore(matchId, apiKey) {
+    const res = await fetch(`${FB_BASE}/matches/${matchId}`, {
+        headers: { 'X-Auth-Token': apiKey }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.score || null;
+}
+
+async function fetchLiveTeamMatch(teamId, apiKey) {
+    const res = await fetch(`${FB_BASE}/teams/${teamId}/matches?status=IN_PLAY,PAUSED&limit=1`, {
+        headers: { 'X-Auth-Token': apiKey }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.matches?.[0] || null;
+}
+
 // ── Cache ─────────────────────────────────────────────────────────────────────
 
 async function getCachedMatch() {
@@ -153,7 +172,7 @@ function startAutoRefresh(container, refreshMs) {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 
-function renderMatch(container, match, gmtOffset, lastMatch = null, trackedTeamId = null) {
+function renderMatch(container, match, gmtOffset, lastMatch = null, trackedTeamId = null, liveScore = null) {
     clearTicker();
     const status = matchStatus(match.utcDate);
     const t = applyGMT(match.utcDate, gmtOffset);
@@ -171,11 +190,20 @@ function renderMatch(container, match, gmtOffset, lastMatch = null, trackedTeamI
         badgeHtml = `<span class="fb-badge fb-badge-upcoming" id="fb-days">…</span>`;
     }
 
+    let centerTopHtml;
+    if (status === 'live') {
+        const homeGoals = liveScore?.fullTime?.home ?? '?';
+        const awayGoals = liveScore?.fullTime?.away ?? '?';
+        centerTopHtml = `<div class="fb-live-score">${homeGoals} – ${awayGoals}</div>`;
+    } else {
+        centerTopHtml = `<div class="fb-vs">VS</div>`;
+    }
+
     container.innerHTML = `
         <div class="fb-card${status === 'live' ? ' fb-card-live' : status === 'soon' ? ' fb-card-soon' : ''}">
             <div class="fb-header">
                 <div class="fb-competition">
-                    ${comp.emblem ? `<img class="fb-comp-logo" src="${comp.emblem}" alt="">` : '⚽'}
+                    ${comp.emblem ? `<img class="fb-comp-logo${comp.emblem.includes('ELC.png') ? ' fb-comp-logo-sm' : ''}" src="${comp.emblem}" alt="">` : '⚽'}
                     <span>${comp.name}</span>
                 </div>
                 <button class="fb-icon-btn" id="fb-settings-btn" title="Football settings">⚙</button>
@@ -188,7 +216,7 @@ function renderMatch(container, match, gmtOffset, lastMatch = null, trackedTeamI
                 </div>
 
                 <div class="fb-center">
-                    <div class="fb-vs">VS</div>
+                    ${centerTopHtml}
                     <div class="fb-date-line">${t.day}, ${t.date} ${t.month}</div>
                     <div class="fb-time-line">${t.hh}:${t.mm}<span class="fb-ampm"> ${t.ampm}</span><span class="fb-gmt"> GMT${sign}${gmtOffset}</span></div>
                     ${badgeHtml}
@@ -400,24 +428,35 @@ export async function initFootball(container) {
         return;
     }
 
-    // Try cache first
+    // Try cache first (skip cache if time-window says live — fetch fresh API data instead)
     const cached = await getCachedMatch();
     const cachedLast = await getCachedLastMatch();
-    if (cached) {
-        renderMatch(container, cached, gmtOffset, cachedLast, pid);
+    if (cached && matchStatus(cached.utcDate) !== 'live') {
+        renderMatch(container, cached, gmtOffset, cachedLast, pid, null);
         startAutoRefresh(container, refreshMs);
         return;
     }
 
     // Cache miss — fetch from API
     try {
-        const [match, lastMatch] = await Promise.all([
-            fetchNextMatch(pid, key),
+        // Check for a currently in-play/paused match first — these don't appear in SCHEDULED
+        const [liveMatch, lastMatch] = await Promise.all([
+            fetchLiveTeamMatch(pid, key),
             fetchLastMatch(pid, key),
         ]);
-        await setCachedMatch(match);
         if (lastMatch) await setCachedLastMatch(lastMatch);
-        renderMatch(container, match, gmtOffset, lastMatch, pid);
+
+        if (liveMatch) {
+            const liveScore = await fetchLiveScore(liveMatch.id, key);
+            // Don't cache live match — it's polled every 2 min anyway
+            renderMatch(container, liveMatch, gmtOffset, lastMatch, pid, liveScore);
+            startAutoRefresh(container, LIVE_REFRESH_MS);
+            return;
+        }
+
+        const match = await fetchNextMatch(pid, key);
+        await setCachedMatch(match);
+        renderMatch(container, match, gmtOffset, lastMatch, pid, null);
         startAutoRefresh(container, refreshMs);
     } catch (e) {
         const msgs = {
